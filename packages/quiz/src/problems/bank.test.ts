@@ -67,18 +67,16 @@ describe("problem bank", () => {
   }
 });
 
-describe("easy mode", () => {
-  const easyProblems = PROBLEM_BANK.filter((problem) => problem.difficulty === "easy");
-
+describe("sample ids", () => {
   it("never asks for an ObjectId literal", () => {
-    for (const problem of easyProblems) {
+    for (const problem of PROBLEM_BANK) {
       const text = [problem.statement, problem.referenceAnswer, ...problem.hints].join("\n");
       expect(text, problem.id).not.toContain("ObjectId");
     }
   });
 
   it("gives every sample document a short numeric id", () => {
-    for (const problem of easyProblems) {
+    for (const problem of PROBLEM_BANK) {
       for (const document of problem.sampleDocuments) {
         expect(typeof document["_id"], problem.id).toBe("number");
       }

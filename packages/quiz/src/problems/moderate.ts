@@ -1,5 +1,5 @@
 import type { Problem } from "../types.js";
-import { objectId, rx } from "../values.js";
+import { rx } from "../values.js";
 import {
   CUSTOMERS,
   EMPLOYEES,
@@ -235,9 +235,9 @@ export const moderateProblems: Problem[] = [
     difficulty: "moderate",
     operation: "update",
     statement:
-      'The order with _id ObjectId("66f1a2b3c4d5e6f7a8b9c0d9") gained a 5 fee. Increase its total by 5 and append "priority" to its tags.',
+      "The order with _id 101 gained a 5 fee. Increase its total by 5 and append \"priority\" to its tags.",
     clues: ['Increase its total by 5 and append "priority" to its tags'],
-    sql: "UPDATE orders SET total = total + 5, tags = array_append(tags, 'priority') WHERE _id = '66f1a2b3c4d5e6f7a8b9c0d9';",
+    sql: "UPDATE orders SET total = total + 5, tags = array_append(tags, 'priority') WHERE _id = 101;",
     collection: "orders",
     sampleDocuments: ORDERS,
     hints: [
@@ -246,7 +246,7 @@ export const moderateProblems: Problem[] = [
       "Both operators can live in the same update document.",
     ],
     referenceAnswer:
-      'db.orders.updateOne({ _id: ObjectId("66f1a2b3c4d5e6f7a8b9c0d9") }, { $inc: { total: 5 }, $push: { tags: "priority" } })',
+      'db.orders.updateOne({ _id: 101 }, { $inc: { total: 5 }, $push: { tags: "priority" } })',
     rubric: [
       {
         id: "collection",
@@ -264,7 +264,7 @@ export const moderateProblems: Problem[] = [
         id: "filter",
         label: "Filter condition",
         weight: 30,
-        expectation: { kind: "filter", doc: { _id: objectId("66f1a2b3c4d5e6f7a8b9c0d9") } },
+        expectation: { kind: "filter", doc: { _id: 101 } },
       },
       {
         id: "update",

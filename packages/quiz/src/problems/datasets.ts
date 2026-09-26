@@ -1,16 +1,11 @@
 /**
  * Shared illustrative data for the problem bank. These documents are never executed
  * against a database; they exist for display and for the opt-in in-browser preview.
+ *
+ * Every `_id` is a short record number rather than a 24-character `ObjectId("...")`
+ * literal, so a problem can ask the learner to match `_id` without asking them to type
+ * an unreadable hex string.
  */
-
-/**
- * Easy-mode display view of a dataset: `_id` is rewritten to a short numeric record number so
- * easy problems can ask the learner to match `_id` without writing a 24-character
- * `ObjectId("...")` literal. The source documents are left untouched for the other difficulties.
- */
-export function withNumericIds(documents: Record<string, unknown>[]): Record<string, unknown>[] {
-  return documents.map((document, index) => ({ ...document, _id: 101 + index }));
-}
 
 export const PRODUCTS: Record<string, unknown>[] = [
   {
@@ -83,7 +78,7 @@ export const PRODUCTS: Record<string, unknown>[] = [
 
 export const CUSTOMERS: Record<string, unknown>[] = [
   {
-    _id: "66f1a2b3c4d5e6f7a8b9c0d1",
+    _id: 101,
     name: "Ada Lovelace",
     email: "ada@gmail.com",
     tier: "gold",
@@ -94,7 +89,7 @@ export const CUSTOMERS: Record<string, unknown>[] = [
     joined: "2024-05-01",
   },
   {
-    _id: "66f1a2b3c4d5e6f7a8b9c0d2",
+    _id: 102,
     name: "Ben Carter",
     email: "ben@example.com",
     tier: "trial",
@@ -105,7 +100,7 @@ export const CUSTOMERS: Record<string, unknown>[] = [
     joined: "2026-01-20",
   },
   {
-    _id: "66f1a2b3c4d5e6f7a8b9c0d3",
+    _id: 103,
     name: "Carol Danvers",
     email: "carol@example.com",
     tier: "pro",
@@ -116,7 +111,7 @@ export const CUSTOMERS: Record<string, unknown>[] = [
     joined: "2023-11-09",
   },
   {
-    _id: "66f1a2b3c4d5e6f7a8b9c0d4",
+    _id: 104,
     name: "Dana Scully",
     email: "dana@example.com",
     tier: "trial",
@@ -127,7 +122,7 @@ export const CUSTOMERS: Record<string, unknown>[] = [
     joined: "2025-08-30",
   },
   {
-    _id: "66f1a2b3c4d5e6f7a8b9c0d5",
+    _id: 105,
     name: "Evan Wright",
     email: "evan@GMAIL.com",
     tier: "basic",
@@ -141,7 +136,7 @@ export const CUSTOMERS: Record<string, unknown>[] = [
 
 export const ORDERS: Record<string, unknown>[] = [
   {
-    _id: "66f1a2b3c4d5e6f7a8b9c0d9",
+    _id: 101,
     customerId: 1,
     status: "pending",
     total: 42,
@@ -151,7 +146,7 @@ export const ORDERS: Record<string, unknown>[] = [
     items: [{ sku: "P-100", name: "Atlas of Maps", qty: 1, price: 42 }],
   },
   {
-    _id: "66f1a2b3c4d5e6f7a8b9c0da",
+    _id: 102,
     customerId: 2,
     status: "shipped",
     total: 18,
@@ -161,7 +156,7 @@ export const ORDERS: Record<string, unknown>[] = [
     items: [{ sku: "P-101", name: "Pen", qty: 9, price: 2 }],
   },
   {
-    _id: "66f1a2b3c4d5e6f7a8b9c0db",
+    _id: 103,
     customerId: 3,
     status: "pending",
     total: 240,
@@ -171,7 +166,7 @@ export const ORDERS: Record<string, unknown>[] = [
     items: [{ sku: "P-103", name: "Keyboard", qty: 3, price: 80 }],
   },
   {
-    _id: "66f1a2b3c4d5e6f7a8b9c0dc",
+    _id: 104,
     customerId: 5,
     status: "delivered",
     total: 150,

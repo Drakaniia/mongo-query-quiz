@@ -8,16 +8,7 @@ import {
   REVIEWS,
   SESSIONS,
   TICKETS,
-  withNumericIds,
 } from "./datasets.js";
-
-/**
- * Easy problems show short numeric ids, so matching `_id` never asks a beginner to write a
- * 24-character `ObjectId(...)` literal. The shared datasets keep their ObjectId values for the
- * moderate and difficult problems.
- */
-const CUSTOMERS_SIMPLE = withNumericIds(CUSTOMERS);
-const ORDERS_SIMPLE = withNumericIds(ORDERS);
 
 export const easyProblems: Problem[] = [
   {
@@ -92,7 +83,7 @@ export const easyProblems: Problem[] = [
     clues: ["the version field must be removed from every order that has already shipped"],
     sql: "UPDATE orders SET version = NULL WHERE status = 'shipped';",
     collection: "orders",
-    sampleDocuments: ORDERS_SIMPLE,
+    sampleDocuments: ORDERS,
     hints: [
       "More than one order matches, so use `db.orders.updateMany(filter, update)`.",
       "The `$unset` operator deletes a field.",
@@ -128,7 +119,7 @@ export const easyProblems: Problem[] = [
     clues: ["the one customer whose _id is 101"],
     sql: "SELECT * FROM customers WHERE _id = 101;",
     collection: "customers",
-    sampleDocuments: CUSTOMERS_SIMPLE,
+    sampleDocuments: CUSTOMERS,
     hints: [
       "When you expect at most one document, `findOne` is the natural method.",
       "The id is the short number 101, so match `_id` with the plain value from the sample documents.",
@@ -163,7 +154,7 @@ export const easyProblems: Problem[] = [
     clues: ["just the name and email of every customer"],
     sql: "SELECT name, email FROM customers;",
     collection: "customers",
-    sampleDocuments: CUSTOMERS_SIMPLE,
+    sampleDocuments: CUSTOMERS,
     hints: [
       "Projection is the second argument to `find`.",
       "Include a field by setting it to `1`.",
@@ -198,7 +189,7 @@ export const easyProblems: Problem[] = [
     clues: ['Set the active flag of the account with email "carol@example.com" to false'],
     sql: "UPDATE customers SET active = false WHERE email = 'carol@example.com';",
     collection: "customers",
-    sampleDocuments: CUSTOMERS_SIMPLE,
+    sampleDocuments: CUSTOMERS,
     hints: [
       "Use `db.customers.updateOne(filter, update)`.",
       "The `$set` operator assigns field values.",
@@ -385,7 +376,7 @@ export const easyProblems: Problem[] = [
     clues: ["the tag platinum has to be added to the account of the customer on the gold tier"],
     sql: "UPDATE customers SET tags = 'platinum' WHERE tier = 'gold';",
     collection: "customers",
-    sampleDocuments: CUSTOMERS_SIMPLE,
+    sampleDocuments: CUSTOMERS,
     hints: [
       "The gold tier is a single account, so use `db.customers.updateOne(filter, update)`.",
       "`$addToSet` appends a value to an array field, but only when it is not there already.",
@@ -422,7 +413,7 @@ export const easyProblems: Problem[] = [
     clues: ["every customer older than 40"],
     sql: "SELECT * FROM customers WHERE age > 40;",
     collection: "customers",
-    sampleDocuments: CUSTOMERS_SIMPLE,
+    sampleDocuments: CUSTOMERS,
     hints: [
       "Reach for a comparison operator on `age`.",
       '"Older than" is a strict comparison, so `$gt`.',
@@ -453,7 +444,7 @@ export const easyProblems: Problem[] = [
     clues: ['Set the tier of the account with email "dana@example.com" to "pro"'],
     sql: "UPDATE customers SET tier = 'pro' WHERE email = 'dana@example.com';",
     collection: "customers",
-    sampleDocuments: CUSTOMERS_SIMPLE,
+    sampleDocuments: CUSTOMERS,
     hints: [
       "Only one account changes, so `updateOne` is right.",
       "The filter uses an equality match on `email`.",
@@ -498,7 +489,7 @@ export const easyProblems: Problem[] = [
     clues: ["every order with a total of at least 200"],
     sql: "SELECT * FROM orders WHERE total >= 200;",
     collection: "orders",
-    sampleDocuments: ORDERS_SIMPLE,
+    sampleDocuments: ORDERS,
     hints: [
       "Filter on the numeric `total` field.",
       '"At least" is an inclusive comparison, so `$gte`.',
@@ -529,7 +520,7 @@ export const easyProblems: Problem[] = [
     clues: ["every order that is still pending", "each of those totals has to grow by 10"],
     sql: "UPDATE orders SET total = total + 10 WHERE status = 'pending';",
     collection: "orders",
-    sampleDocuments: ORDERS_SIMPLE,
+    sampleDocuments: ORDERS,
     hints: [
       "Several orders are still pending, so use `updateMany`.",
       '`$inc` adds to the current value, which is what "grow by 10" asks for.',
@@ -565,7 +556,7 @@ export const easyProblems: Problem[] = [
     clues: ["the order with _id 102", 'setting its status to "delivered"'],
     sql: "UPDATE orders SET status = 'delivered' WHERE _id = 102;",
     collection: "orders",
-    sampleDocuments: ORDERS_SIMPLE,
+    sampleDocuments: ORDERS,
     hints: [
       "A single order changes, so use `updateOne`.",
       "Match the order on `_id` with the plain number 102 shown in the sample documents.",
