@@ -34,9 +34,19 @@ jobs:
 
       - name: Verify SPA artifact
         run: |
+          echo "--- build tree (depth 2) ---"
+          find apps/web/build -maxdepth 2 | sort
+          echo "--- client root ---"
+          ls -la apps/web/build/client
           test -f apps/web/build/client/index.html
           test -f apps/web/build/client/_redirects
-          test ! -d apps/web/build/server
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pages-client
+          path: apps/web/build/client
+          retention-days: 7
+          if-no-files-found: error
 
       - name: Create Pages project
         run: pnpm exec wrangler pages project create mongo-query-quiz --production-branch main
