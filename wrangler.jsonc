@@ -1,0 +1,6 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "mongo-query-quiz",
+  "pages_build_output_dir": "apps/web/build/client",
+  "compatibility_date": "2026-09-26"
+}
