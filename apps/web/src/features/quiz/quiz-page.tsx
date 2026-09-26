@@ -11,6 +11,7 @@ import { ProblemNav } from "./problem-nav";
 import { ProblemPane } from "./problem-pane";
 import { SessionSetup } from "./session-setup";
 import { SessionSummary } from "./session-summary";
+import { useKeyboardNav } from "./use-keyboard-nav";
 import { useQuizProgress } from "./use-quiz-progress";
 import { useQuizSession } from "./use-quiz-session";
 
@@ -47,6 +48,13 @@ export function QuizPage() {
     () => normalizeConfig(progress.progress.lastConfig ?? DEFAULT_CONFIG),
     [progress.progress.lastConfig],
   );
+
+  // Arrow keys page through the run; goTo clamps at both ends.
+  useKeyboardNav({
+    enabled: view === "run" && quiz.session !== null,
+    onPrevious: quiz.previous,
+    onNext: quiz.next,
+  });
 
   if (!progress.hydrated) {
     return (

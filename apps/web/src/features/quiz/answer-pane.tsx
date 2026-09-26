@@ -84,10 +84,22 @@ export function AnswerPane({
             {answerRevealed ? "Hide answer" : "Show answer"}
           </Button>
           <div className="ml-auto flex gap-2">
-            <Button variant="outline" size="sm" onClick={onPrevious} disabled={!canPrevious}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onPrevious}
+              disabled={!canPrevious}
+              title="Previous problem (←)"
+            >
               Previous
             </Button>
-            <Button variant="outline" size="sm" onClick={onNext} disabled={!canNext}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onNext}
+              disabled={!canNext}
+              title="Next problem (→)"
+            >
               Next
             </Button>
           </div>
