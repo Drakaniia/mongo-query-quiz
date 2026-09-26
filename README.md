@@ -1,6 +1,9 @@
 # mongo
 
-This project was created with [Better-T-Stack](https://github.com/AmanVarshney01/create-better-t-stack), a modern TypeScript stack that combines React, React Router, Hono, and more.
+An interactive MongoDB query and update practice quiz. Each problem presents a real-world task
+and its SQL equivalent; you translate it into MongoDB shell syntax and get structural, per-rubric
+feedback on the query you wrote. The grading engine lives in `packages/quiz` (`@mongo/quiz`) and is
+UI-independent and unit-tested.
 
 ## Features
 
@@ -115,9 +118,21 @@ mongo/
 │   ├── web/         # Frontend application (React + React Router)
 │   └── server/      # Backend API (Hono)
 ├── packages/
+│   ├── quiz/        # MongoDB query parser, rubric grader, problem bank (Vitest-tested)
 │   ├── ui/          # Shared shadcn/ui components and styles
 │   └── db/          # Database schema & queries
 ```
+
+## Practice Quiz
+
+The quiz lives at `/quiz`.
+
+- `packages/quiz` parses MongoDB shell syntax (no `eval`), normalizes equivalences, grades against
+  a weighted per-problem rubric with partial credit, and can preview a `find` against illustrative
+  sample documents.
+- `apps/web/src/features/quiz` renders the setup screen, the two-pane problem/answer experience,
+  and the session summary. Progress (best scores, revealed hints) is stored in `localStorage`.
+- Run the engine's tests with `pnpm --filter @mongo/quiz test`.
 
 ## Available Scripts
 
@@ -131,6 +146,7 @@ mongo/
 - `pnpm run db:migrate`: Run database migrations
 - `pnpm run db:studio`: Open database studio UI
 - `pnpm run check`: Run Vite+ format/lint checks and workspace TypeScript checks
+- `pnpm run test`: Run the workspace test suites (Vitest, currently `@mongo/quiz`)
 - `pnpm run lint`: Run Vite+ lint checks
 - `pnpm run format`: Run Vite+ formatting
 - `pnpm run staged`: Run Vite+ checks against staged files

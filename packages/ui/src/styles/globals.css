@@ -30,7 +30,11 @@
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --radius: 0.625rem;
+  --radius: 0.75rem;
+  /* Apple-style motion curves: snappy decelerating settle + springy overshoot. */
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -76,7 +80,13 @@
 }
 
 @theme inline {
-  --font-sans: "Inter Variable", sans-serif;
+  /* Inter is loaded with an optical-size axis; fall back to the platform system face. */
+  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+  /* Apple-style motion curves: a snappy decelerating settle and a springy overshoot. */
+  --ease-ios: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -121,10 +131,186 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply font-sans bg-background text-foreground;
-  }
   html {
     @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply font-sans bg-background text-foreground;
+    /* Text changes shape with size, like Apple's Dynamic Type. */
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background-color: color-mix(in oklab, var(--primary) 22%, transparent);
+  }
+  /* Tame abrupt dark<->light theme flips into a short fade. */
+  :root {
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Typography — tracking and leading scale with size, never fixed.      */
+/* ------------------------------------------------------------------ */
+@utility type-display {
+  font-size: clamp(2rem, 1.2rem + 3.4vw, 3.25rem);
+  line-height: 1.04;
+  letter-spacing: -0.024em;
+  font-weight: 600;
+}
+
+@utility type-title {
+  font-size: 1.5rem;
+  line-height: 1.14;
+  letter-spacing: -0.019em;
+  font-weight: 600;
+}
+
+@utility type-headline {
+  font-size: 1.0625rem;
+  line-height: 1.24;
+  letter-spacing: -0.014em;
+  font-weight: 600;
+}
+
+@utility type-body {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  letter-spacing: -0.006em;
+}
+
+@utility type-caption {
+  font-size: 0.75rem;
+  line-height: 1.35;
+  letter-spacing: 0.002em;
+}
+
+/* Small caps-style section labels: positive tracking keeps them legible. */
+@utility type-overline {
+  font-size: 0.6875rem;
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+/* ------------------------------------------------------------------ */
+/* Materials & depth — translucency conveys hierarchy.                 */
+/* ------------------------------------------------------------------ */
+@utility material-chrome {
+  background-color: color-mix(in oklab, var(--background) 68%, transparent);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+}
+
+@utility material-thin {
+  background-color: color-mix(in oklab, var(--card) 62%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(180%);
+  backdrop-filter: blur(16px) saturate(180%);
+}
+
+@utility material-thick {
+  background-color: color-mix(in oklab, var(--card) 88%, transparent);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+}
+
+/* Bigger surfaces read as thicker: heavier blur and a deeper shadow. */
+@utility depth-1 {
+  box-shadow:
+    0 1px 1px -0.5px rgb(0 0 0 / 0.06),
+    0 2px 8px -4px rgb(0 0 0 / 0.12);
+}
+
+@utility depth-2 {
+  box-shadow:
+    0 2px 4px -2px rgb(0 0 0 / 0.1),
+    0 14px 36px -14px rgb(0 0 0 / 0.22);
+}
+
+/* Fade content where it meets floating chrome, instead of a hard hairline. */
+@utility scroll-edge-top {
+  mask-image: linear-gradient(to bottom, transparent 0, black 16px);
+}
+
+/* Respond on pointer-down: pressure without layout shift. */
+@utility press {
+  transition:
+    transform 180ms var(--ease-ios),
+    background-color 180ms var(--ease-ios),
+    opacity 180ms var(--ease-ios);
+}
+
+/* Materialize, don't just fade: blur/fade/scale arrive together. */
+@keyframes materialize {
+  from {
+    opacity: 0;
+    transform: scale(0.985) translateY(6px);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: blur(0);
+  }
+}
+
+@utility animate-materialize {
+  animation: materialize 340ms var(--ease-out-quint) both;
+}
+
+/* ------------------------------------------------------------------ */
+/* Accessibility — reduce motion / transparency / contrast.            */
+/* ------------------------------------------------------------------ */
+
+/* Swap slides and springs for short, legible cross-fades. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+    transition-property: opacity, background-color, border-color, color, fill, stroke !important;
+  }
+}
+
+/* Frostier, more solid materials when the user asks for less transparency. */
+@media (prefers-reduced-transparency: reduce) {
+  .material-chrome,
+  .material-thin,
+  .material-thick {
+    background-color: var(--background);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Near-solid surfaces with a defined border under high-contrast. */
+@media (prefers-contrast: more) {
+  .material-chrome,
+  .material-thin,
+  .material-thick {
+    background-color: var(--background);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border: 1px solid var(--foreground);
+  }
+  :root,
+  .dark {
+    --border: color-mix(in oklab, var(--foreground) 55%, transparent);
+    --muted-foreground: color-mix(in oklab, var(--foreground) 78%, transparent);
   }
 }

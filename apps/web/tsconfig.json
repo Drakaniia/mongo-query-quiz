@@ -10,6 +10,8 @@
     "rootDirs": [".", "./.react-router/types"],
     "paths": {
       "@/*": ["./src/*"],
+      "@mongo/quiz": ["../../packages/quiz/src/index.ts"],
+      "@mongo/quiz/problems": ["../../packages/quiz/src/problems/index.ts"],
       "@mongo/ui/*": ["../../packages/ui/src/*"]
     },
     "esModuleInterop": true,
