@@ -1,3 +1,4 @@
+import { OPERATION_KINDS, matchesConfig } from "./filters.js";
 import type { Difficulty, Problem, QuizSession, QuizSessionConfig } from "./types.js";
 
 export const COUNT_PRESETS = [5, 10, 15, 30] as const;
@@ -17,8 +18,8 @@ export function shuffle<T>(items: T[], rng: () => number): T[] {
 }
 
 /**
- * Reject structurally impossible configs. Unknown difficulties and non-preset counts
- * are errors; an empty difficulty list means "All".
+ * Reject structurally impossible configs. Unknown difficulties, operations and non-preset
+ * counts are errors; an empty difficulty list means "All".
  */
 export function validateConfig(config: QuizSessionConfig): void {
   if (!COUNT_PRESETS.includes(config.count as (typeof COUNT_PRESETS)[number])) {
@@ -29,26 +30,33 @@ export function validateConfig(config: QuizSessionConfig): void {
       throw new Error(`Unknown difficulty "${difficulty}"`);
     }
   }
-}
-
-function matchesDifficulty(problem: Problem, difficulties: Difficulty[]): boolean {
-  if (difficulties.length === 0) return true;
-  return difficulties.includes(problem.difficulty);
-}
-
-/** Round-robin across difficulty buckets so a mixed run does not feel blocked. */
-function interleave(groups: Problem[][]): Problem[] {
-  const active = groups.filter((group) => group.length > 0);
-  const result: Problem[] = [];
-  let index = 0;
-  while (active.some((group) => group.length > index)) {
-    for (const group of active) {
-      const item = group[index];
-      if (item) result.push(item);
+  for (const operation of config.operations) {
+    if (!OPERATION_KINDS.includes(operation)) {
+      throw new Error(`Unknown operation "${operation}"`);
     }
-    index += 1;
   }
-  return result;
+}
+
+/**
+ * Place each group's k-th item at its proportional slot, so a group's items land evenly
+ * across the run instead of clumping. With an even split this alternates; with a lopsided
+ * one it keeps the minority spread at its natural spacing rather than bunching it at an end.
+ * Ties are broken by the RNG so the order stays unpredictable.
+ */
+function spread(groups: Problem[][], rng: () => number): Problem[] {
+  const total = groups.reduce((sum, group) => sum + group.length, 0);
+  if (total === 0) return [];
+
+  const placed = groups.flatMap((group) =>
+    group.map((problem, k) => ({
+      problem,
+      slot: ((k + 0.5) * total) / group.length,
+      jitter: rng(),
+    })),
+  );
+
+  placed.sort((a, b) => a.slot - b.slot || a.jitter - b.jitter);
+  return placed.map((entry) => entry.problem);
 }
 
 /**
@@ -66,23 +74,24 @@ export function sampleProblems(
     config.difficulties.length === 0
       ? [...DIFFICULTIES]
       : DIFFICULTIES.filter((d) => config.difficulties.includes(d));
-  const matches = bank.filter((problem) => matchesDifficulty(problem, config.difficulties));
+  const matches = bank.filter((problem) => matchesConfig(problem, config));
   const availableCount = matches.length;
   const capped = availableCount < config.count;
 
-  // Shuffle within each difficulty, then interleave across difficulties.
+  // One bucket per difficulty x operation, so both facets stay spread through the run.
   const groups: Problem[][] = activeDifficulties
-    .map((difficulty) =>
+    .flatMap((difficulty) => OPERATION_KINDS.map((operation) => [difficulty, operation] as const))
+    .map(([difficulty, operation]) =>
       shuffle(
-        matches.filter((problem) => problem.difficulty === difficulty),
+        matches.filter(
+          (problem) => problem.difficulty === difficulty && problem.operation === operation,
+        ),
         rng,
       ),
     )
     .filter((group) => group.length > 0);
 
-  const firstGroup = groups[0];
-  const ordered: Problem[] =
-    groups.length <= 1 ? (firstGroup ?? []) : interleave(groups);
+  const ordered = spread(groups, rng);
 
   const problems = capped ? ordered : ordered.slice(0, config.count);
 

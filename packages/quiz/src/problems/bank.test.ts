@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { grade, parse, resolveWeight, sampleProblems } from "../index.js";
+import type { QuizSessionConfig } from "../types.js";
 import { PROBLEM_BANK, countByDifficulty } from "./index.js";
 
 describe("problem bank", () => {
@@ -76,13 +77,20 @@ describe("bank size targets", () => {
 
   for (const difficulty of ["easy", "moderate", "difficult"] as const) {
     it(`serves an uncapped random run of thirty ${difficulty} problems`, () => {
-      const first = sampleProblems(PROBLEM_BANK, { difficulties: [difficulty], count: 30 });
+      const config: QuizSessionConfig = {
+        difficulties: [difficulty],
+        count: 30,
+        operations: [],
+        queryOperators: [],
+        updateOperators: [],
+      };
+      const first = sampleProblems(PROBLEM_BANK, config);
       expect(first.problems).toHaveLength(30);
       expect(first.capped).toBe(false);
       expect(first.problems.every((problem) => problem.difficulty === difficulty)).toBe(true);
 
       // Two draws should differ, proving the run order is randomised rather than fixed.
-      const second = sampleProblems(PROBLEM_BANK, { difficulties: [difficulty], count: 30 });
+      const second = sampleProblems(PROBLEM_BANK, config);
       expect(first.problems.map((problem) => problem.id)).not.toEqual(
         second.problems.map((problem) => problem.id),
       );

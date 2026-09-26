@@ -125,8 +125,14 @@ export interface GradeResult {
 export interface QuizSessionConfig {
   /** Chosen difficulty mix; empty means "All". */
   difficulties: Difficulty[];
-  /** Requested number of items (5 | 10 | 15). */
+  /** Requested number of items (5 | 10 | 15 | 30). */
   count: number;
+  /** Query and/or update problems; empty means "Both". */
+  operations: OperationKind[];
+  /** Query operators to require; empty means "All". Any-match semantics. */
+  queryOperators: string[];
+  /** Update operators to require; empty means "All". Any-match semantics. */
+  updateOperators: string[];
 }
 
 /** The resolved run: concrete problems in the order they will be presented. */

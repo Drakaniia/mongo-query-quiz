@@ -19,12 +19,18 @@ export {
   type QueryPreview,
   type QueryPreviewOk,
 } from "./match.js";
-export {
-  COUNT_PRESETS,
-  DIFFICULTIES,
-  sampleProblems,
-  shuffle,
-  validateConfig,
-} from "./session.js";
+export { COUNT_PRESETS, DIFFICULTIES, sampleProblems, shuffle, validateConfig } from "./session.js";
 export { MongoRegex, MongoTypedValue } from "./types.js";
 export { rx, objectId, isoDate } from "./values.js";
+export {
+  OPERATION_KINDS,
+  QUERY_OPERATOR_ORDER,
+  UPDATE_OPERATOR_ORDER,
+  collectQueryOperators,
+  collectUpdateOperators,
+  countMatching,
+  matchesConfig,
+  normalizeConfig,
+  queryOperatorsOf,
+  updateOperatorsOf,
+} from "./filters.js";
