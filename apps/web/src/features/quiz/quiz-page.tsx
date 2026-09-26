@@ -138,8 +138,11 @@ export function QuizPage() {
               answerRevealed={progress.progress.showAnswerRevealed[problem.id] ?? false}
               canPrevious={position > 0}
               canNext={position < session.problems.length - 1}
-              onSubmit={(input) => quiz.submit(input)}
-              onRevealAnswer={() => progress.revealAnswer(problem.id)}
+              onSubmit={(input) => {
+                const result = quiz.submit(input);
+                if (result?.ok) progress.revealAnswer(problem.id);
+              }}
+              onToggleAnswer={() => progress.toggleAnswer(problem.id)}
               onPrevious={quiz.previous}
               onNext={quiz.next}
             />

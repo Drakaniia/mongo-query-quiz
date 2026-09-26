@@ -18,7 +18,7 @@ function PreviewBody({ problem, input }: MatchPreviewProps) {
     return <p className="text-xs text-muted-foreground">Type a query to preview its matches.</p>;
   }
   if (result.status === "error") {
-    return <p className="text-xs text-destructive">{result.error}</p>;
+    return <p className="text-xs text-amber-600 dark:text-amber-400">{result.error}</p>;
   }
   if (result.status === "unsupported") {
     return <p className="text-xs text-muted-foreground">{result.reason}</p>;

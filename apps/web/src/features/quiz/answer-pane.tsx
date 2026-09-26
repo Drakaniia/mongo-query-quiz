@@ -9,6 +9,7 @@ import { AnswerDisplay } from "./answer-display";
 import { MatchPreview } from "./match-preview";
 import { RubricFeedback } from "./rubric-feedback";
 import { ScoreDisplay } from "./score-display";
+import { SyntaxFeedback } from "./syntax-feedback";
 
 interface AnswerPaneProps {
   problem: Problem;
@@ -18,7 +19,7 @@ interface AnswerPaneProps {
   canPrevious: boolean;
   canNext: boolean;
   onSubmit: (input: string) => void;
-  onRevealAnswer: () => void;
+  onToggleAnswer: () => void;
   onPrevious: () => void;
   onNext: () => void;
 }
@@ -31,17 +32,22 @@ export function AnswerPane({
   canPrevious,
   canNext,
   onSubmit,
-  onRevealAnswer,
+  onToggleAnswer,
   onPrevious,
   onNext,
 }: AnswerPaneProps) {
   const [input, setInput] = useState("");
+  // Snapshot of the text the last result came from, so syntax guidance keeps pointing at the
+  // submission that failed even after editing starts again.
+  const [submittedInput, setSubmittedInput] = useState("");
 
   useEffect(() => {
     setInput("");
+    setSubmittedInput("");
   }, [problem.id]);
 
   const handleSubmit = () => {
+    setSubmittedInput(input);
     onSubmit(input);
   };
 
@@ -74,8 +80,8 @@ export function AnswerPane({
 
         <div className="flex flex-wrap items-center gap-2">
           <Button onClick={handleSubmit}>Submit</Button>
-          <Button variant="outline" onClick={onRevealAnswer} disabled={answerRevealed}>
-            {answerRevealed ? "Answer shown" : "Show answer"}
+          <Button variant="outline" onClick={onToggleAnswer}>
+            {answerRevealed ? "Hide answer" : "Show answer"}
           </Button>
           <div className="ml-auto flex gap-2">
             <Button variant="outline" size="sm" onClick={onPrevious} disabled={!canPrevious}>
@@ -90,20 +96,7 @@ export function AnswerPane({
         {answerRevealed ? <AnswerDisplay referenceAnswer={problem.referenceAnswer} /> : null}
 
         <div aria-live="polite" className="flex flex-col gap-4">
-          {result && !result.ok ? (
-            <div
-              role="alert"
-              className="animate-materialize rounded-lg border border-destructive/40 bg-destructive/10 p-3 type-caption text-destructive"
-            >
-              <p className="font-medium">Could not parse your statement</p>
-              <p>{result.parseError}</p>
-              {typeof result.parseErrorPosition === "number" ? (
-                <p className="mt-1 font-mono opacity-80">
-                  at position {result.parseErrorPosition}
-                </p>
-              ) : null}
-            </div>
-          ) : null}
+          {result && !result.ok ? <SyntaxFeedback input={submittedInput} result={result} /> : null}
 
           {result && result.ok ? (
             <>

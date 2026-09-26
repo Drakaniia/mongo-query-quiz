@@ -77,6 +77,7 @@ export interface QuizProgressApi {
   recordScore: (problemId: string, score: number) => void;
   revealHint: (problemId: string) => void;
   revealAnswer: (problemId: string) => void;
+  toggleAnswer: (problemId: string) => void;
   setLastConfig: (config: QuizSessionConfig) => void;
   setSession: (problemIds: string[], startedAt?: string) => void;
   setLastProblemId: (problemId: string) => void;
@@ -130,6 +131,16 @@ export function useQuizProgress(): QuizProgressApi {
     }));
   }, []);
 
+  const toggleAnswer = useCallback((problemId: string) => {
+    setProgress((current) => ({
+      ...current,
+      showAnswerRevealed: {
+        ...current.showAnswerRevealed,
+        [problemId]: !(current.showAnswerRevealed[problemId] ?? false),
+      },
+    }));
+  }, []);
+
   const setLastConfig = useCallback((config: QuizSessionConfig) => {
     setProgress((current) => ({ ...current, lastConfig: config }));
   }, []);
@@ -167,6 +178,7 @@ export function useQuizProgress(): QuizProgressApi {
     recordScore,
     revealHint,
     revealAnswer,
+    toggleAnswer,
     setLastConfig,
     setSession,
     setLastProblemId,
