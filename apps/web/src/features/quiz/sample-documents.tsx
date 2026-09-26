@@ -56,7 +56,9 @@ export function SampleDocuments({ documents }: { documents: Record<string, unkno
           <tr>
             {columns.map((column) => (
               <th key={column} className="border-b px-2 py-1.5 align-bottom whitespace-nowrap">
-                <span className="type-overline block">{column}</span>
+                <span className="type-caption block font-mono font-semibold whitespace-nowrap">
+                  {column}
+                </span>
                 <span className="block text-[0.6rem] font-normal text-muted-foreground">
                   {columnType(documents.map((document) => document[column]))}
                 </span>
