@@ -30,8 +30,13 @@ export function useQuizSession(progress: QuizProgressApi): QuizSessionApi {
   const [position, setPosition] = useState(0);
   const [results, setResults] = useState<Record<string, GradeResult>>({});
 
-  const { setLastConfig, setSession: persistSession, setLastProblemId, recordScore, progress: stored } =
-    progress;
+  const {
+    setLastConfig,
+    setSession: persistSession,
+    setLastProblemId,
+    recordScore,
+    progress: stored,
+  } = progress;
 
   const start = useCallback(
     (config: QuizSessionConfig) => {
@@ -57,6 +62,9 @@ export function useQuizSession(progress: QuizProgressApi): QuizSessionApi {
     const config: QuizSessionConfig = stored.lastConfig ?? {
       difficulties: [],
       count: problems.length,
+      operations: [],
+      queryOperators: [],
+      updateOperators: [],
     };
     setSession({ config, problems, capped: false, availableCount: problems.length });
     const lastIndex = stored.lastProblemId

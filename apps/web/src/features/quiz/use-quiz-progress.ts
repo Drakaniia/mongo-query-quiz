@@ -1,4 +1,5 @@
 import type { QuizSessionConfig } from "@mongo/quiz";
+import { normalizeConfig } from "@mongo/quiz";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { STORAGE_KEY } from "./constants";
@@ -36,10 +37,14 @@ function readProgress(): QuizProgress {
       bestScores: isNumberRecord(value.bestScores) ? value.bestScores : {},
       revealedHints: isNumberRecord(value.revealedHints) ? value.revealedHints : {},
       showAnswerRevealed: isBooleanRecord(value.showAnswerRevealed) ? value.showAnswerRevealed : {},
-      ...(value.lastConfig ? { lastConfig: sanitizeConfig(value.lastConfig) } : {}),
+      ...(value.lastConfig ? { lastConfig: normalizeConfig(value.lastConfig) } : {}),
       ...(typeof value.lastProblemId === "string" ? { lastProblemId: value.lastProblemId } : {}),
       ...(Array.isArray(value.sessionProblemIds)
-        ? { sessionProblemIds: value.sessionProblemIds.filter((id): id is string => typeof id === "string") }
+        ? {
+            sessionProblemIds: value.sessionProblemIds.filter(
+              (id): id is string => typeof id === "string",
+            ),
+          }
         : {}),
       ...(typeof value.sessionStartedAt === "string"
         ? { sessionStartedAt: value.sessionStartedAt }
@@ -64,19 +69,6 @@ function isBooleanRecord(value: unknown): value is Record<string, boolean> {
     value !== null &&
     Object.values(value).every((entry) => typeof entry === "boolean")
   );
-}
-
-function sanitizeConfig(value: unknown): QuizSessionConfig | undefined {
-  if (typeof value !== "object" || value === null) return undefined;
-  const config = value as Partial<QuizSessionConfig>;
-  if (!Array.isArray(config.difficulties) || typeof config.count !== "number") return undefined;
-  return {
-    difficulties: config.difficulties.filter(
-      (d): d is QuizSessionConfig["difficulties"][number] =>
-        d === "easy" || d === "moderate" || d === "difficult",
-    ),
-    count: config.count,
-  };
 }
 
 export interface QuizProgressApi {

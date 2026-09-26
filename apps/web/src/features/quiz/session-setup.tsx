@@ -4,15 +4,30 @@ import { Button } from "@mongo/ui/components/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@mongo/ui/components/card";
 import { Checkbox } from "@mongo/ui/components/checkbox";
 import { Label } from "@mongo/ui/components/label";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import { cn } from "@mongo/ui/lib/utils";
 
-import { COUNT_PRESETS, DIFFICULTY_LABELS, DIFFICULTY_ORDER } from "./constants";
+import {
+  COUNT_PRESETS,
+  DIFFICULTY_LABELS,
+  DIFFICULTY_ORDER,
+  OPERATION_HINTS,
+  OPERATION_LABELS,
+} from "./constants";
+import { OperationFilter } from "./operation-filter";
+import { OperatorFilter } from "./operator-filter";
+import type { SessionFilters } from "./session-filters";
+import {
+  EMPTY_FILTERS,
+  QUERY_OPERATORS,
+  UPDATE_OPERATORS,
+  useSessionFilters,
+} from "./session-filters";
 
 interface SessionSetupProps {
-  availableByDifficulty: Record<Difficulty, number>;
   defaultConfig: QuizSessionConfig;
+  defaultFilters?: SessionFilters;
   canResume: boolean;
   onStart: (config: QuizSessionConfig) => void;
   onResume: () => void;
@@ -20,8 +35,8 @@ interface SessionSetupProps {
 }
 
 export function SessionSetup({
-  availableByDifficulty,
   defaultConfig,
+  defaultFilters,
   canResume,
   onStart,
   onResume,
@@ -30,13 +45,29 @@ export function SessionSetup({
   const [selected, setSelected] = useState<Difficulty[]>(defaultConfig.difficulties);
   const [count, setCount] = useState<number>(defaultConfig.count);
 
+  const {
+    filters,
+    availableByDifficulty,
+    availableByOperation,
+    availableByQueryOperator,
+    availableByUpdateOperator,
+    matchingCount,
+    setOperations,
+    toggleQueryOperator,
+    toggleUpdateOperator,
+    clearQueryOperators,
+    clearUpdateOperators,
+    setAllQueryOperators,
+    setAllUpdateOperators,
+  } = useSessionFilters(defaultFilters ?? EMPTY_FILTERS, selected);
+
   const allSelected = DIFFICULTY_ORDER.every((difficulty) => selected.includes(difficulty));
   const noneSelected = selected.length === 0;
 
-  const availableCount = useMemo(
-    () => selected.reduce((sum, difficulty) => sum + availableByDifficulty[difficulty], 0),
-    [availableByDifficulty, selected],
-  );
+  const queryOperatorsDisabled =
+    filters.operations.length > 0 && !filters.operations.includes("find");
+  const updateOperatorsDisabled =
+    filters.operations.length > 0 && !filters.operations.includes("update");
 
   const toggleDifficulty = (difficulty: Difficulty) => {
     setSelected((current) =>
@@ -50,7 +81,7 @@ export function SessionSetup({
     setSelected(allSelected ? [] : [...DIFFICULTY_ORDER]);
   };
 
-  const capped = !noneSelected && count > availableCount;
+  const capped = count > matchingCount;
 
   return (
     <div className="animate-materialize mx-auto flex w-full max-w-2xl flex-col gap-5 p-4 sm:p-6">
@@ -106,6 +137,44 @@ export function SessionSetup({
 
       <Card>
         <CardHeader>
+          <CardTitle>Problem type</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <OperationFilter
+            operations={filters.operations}
+            counts={availableByOperation}
+            labels={OPERATION_LABELS}
+            onChange={setOperations}
+          />
+          <div className="flex flex-col gap-3">
+            <OperatorFilter
+              label="Query operators"
+              description={OPERATION_HINTS.find}
+              operators={QUERY_OPERATORS}
+              counts={availableByQueryOperator}
+              selected={filters.queryOperators}
+              onToggle={toggleQueryOperator}
+              onClear={clearQueryOperators}
+              onSelectAll={setAllQueryOperators}
+              disabled={queryOperatorsDisabled}
+            />
+            <OperatorFilter
+              label="Update operators"
+              description={OPERATION_HINTS.update}
+              operators={UPDATE_OPERATORS}
+              counts={availableByUpdateOperator}
+              selected={filters.updateOperators}
+              onToggle={toggleUpdateOperator}
+              onClear={clearUpdateOperators}
+              onSelectAll={setAllUpdateOperators}
+              disabled={updateOperatorsDisabled}
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Number of problems</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
@@ -134,16 +203,30 @@ export function SessionSetup({
             ))}
           </div>
           <p className="type-caption text-muted-foreground">
-            {availableCount} available for this mix.
-            {capped ? ` Only ${availableCount} available — the run will be capped.` : ""}
+            {matchingCount} available for this mix.
+            {capped ? ` Only ${matchingCount} available — the run will be capped.` : ""}
           </p>
+          {matchingCount === 0 ? (
+            <p role="alert" className="type-caption text-destructive">
+              No problems match these filters — try widening the difficulty mix or clearing
+              operators.
+            </p>
+          ) : null}
         </CardContent>
       </Card>
 
       <div className="flex flex-wrap items-center gap-2">
         <Button
-          disabled={noneSelected}
-          onClick={() => onStart({ difficulties: selected, count })}
+          disabled={noneSelected || matchingCount === 0}
+          onClick={() =>
+            onStart({
+              difficulties: selected,
+              count,
+              operations: filters.operations,
+              queryOperators: filters.queryOperators,
+              updateOperators: filters.updateOperators,
+            })
+          }
         >
           Start session
         </Button>

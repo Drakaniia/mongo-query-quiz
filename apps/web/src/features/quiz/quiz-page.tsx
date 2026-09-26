@@ -1,11 +1,12 @@
 import type { QuizSessionConfig } from "@mongo/quiz";
-import { PROBLEM_BANK, countByDifficulty } from "@mongo/quiz/problems";
+import { normalizeConfig } from "@mongo/quiz";
+import { PROBLEM_BANK } from "@mongo/quiz/problems";
 import { Button } from "@mongo/ui/components/button";
 import { Skeleton } from "@mongo/ui/components/skeleton";
 import { useMemo, useState } from "react";
 
 import { AnswerPane } from "./answer-pane";
-import { COUNT_PRESETS, DIFFICULTY_LABELS } from "./constants";
+import { DIFFICULTY_LABELS } from "./constants";
 import { ProblemNav } from "./problem-nav";
 import { ProblemPane } from "./problem-pane";
 import { SessionSetup } from "./session-setup";
@@ -15,21 +16,37 @@ import { useQuizSession } from "./use-quiz-session";
 
 type View = "setup" | "run" | "summary";
 
-const DEFAULT_CONFIG: QuizSessionConfig = { difficulties: [], count: 30 };
+const DEFAULT_CONFIG: QuizSessionConfig = {
+  difficulties: [],
+  count: 30,
+  operations: [],
+  queryOperators: [],
+  updateOperators: [],
+};
+
+/** One short type-filter suffix for the run header; empty when every type is in play. */
+function typeFilterSuffix(config: QuizSessionConfig): string {
+  if (config.operations.length === 1) {
+    return config.operations[0] === "update" ? "Updates only" : "Queries only";
+  }
+  if (config.queryOperators.length > 0) {
+    return `Query operators: ${config.queryOperators.join(", ")}`;
+  }
+  if (config.updateOperators.length > 0) {
+    return `Update operators: ${config.updateOperators.join(", ")}`;
+  }
+  return "";
+}
 
 export function QuizPage() {
   const progress = useQuizProgress();
   const quiz = useQuizSession(progress);
   const [view, setView] = useState<View>("setup");
 
-  const availableByDifficulty = useMemo(() => countByDifficulty(), []);
-
-  const defaultConfig = useMemo<QuizSessionConfig>(() => {
-    const stored = progress.progress.lastConfig;
-    if (!stored) return DEFAULT_CONFIG;
-    const count = COUNT_PRESETS.includes(stored.count) ? stored.count : DEFAULT_CONFIG.count;
-    return { difficulties: stored.difficulties, count };
-  }, [progress.progress.lastConfig]);
+  const defaultConfig = useMemo<QuizSessionConfig>(
+    () => normalizeConfig(progress.progress.lastConfig ?? DEFAULT_CONFIG),
+    [progress.progress.lastConfig],
+  );
 
   if (!progress.hydrated) {
     return (
@@ -44,8 +61,12 @@ export function QuizPage() {
   if (view === "setup" || !quiz.session) {
     return (
       <SessionSetup
-        availableByDifficulty={availableByDifficulty}
         defaultConfig={defaultConfig}
+        defaultFilters={{
+          operations: defaultConfig.operations,
+          queryOperators: defaultConfig.queryOperators,
+          updateOperators: defaultConfig.updateOperators,
+        }}
         canResume={quiz.canResume}
         onStart={(config) => {
           quiz.start(config);
@@ -70,7 +91,8 @@ export function QuizPage() {
         results={quiz.results}
         onNewSession={() => setView("setup")}
         onReview={(problemId) => {
-          const index = quiz.session?.problems.findIndex((problem) => problem.id === problemId) ?? -1;
+          const index =
+            quiz.session?.problems.findIndex((problem) => problem.id === problemId) ?? -1;
           if (index >= 0) quiz.goTo(index);
           setView("run");
         }}
@@ -81,7 +103,8 @@ export function QuizPage() {
   const { session, current, position, results } = quiz;
   const problem = current;
 
-  const sessionLabel = `${session.config.difficulties.length === 0 ? "All" : session.config.difficulties.map((d) => DIFFICULTY_LABELS[d]).join(", ")} · ${session.problems.length} problems${
+  const typeSuffix = typeFilterSuffix(session.config);
+  const sessionLabel = `${session.config.difficulties.length === 0 ? "All" : session.config.difficulties.map((d) => DIFFICULTY_LABELS[d]).join(", ")}${typeSuffix ? ` · ${typeSuffix}` : ""} · ${session.problems.length} problems${
     session.capped ? ` (capped from ${session.availableCount} available)` : ""
   }`;
 

@@ -1,4 +1,4 @@
-import type { Difficulty } from "@mongo/quiz";
+import type { Difficulty, OperationKind } from "@mongo/quiz";
 
 export const STORAGE_KEY = "mongo-quiz-progress";
 
@@ -19,3 +19,13 @@ export const DIFFICULTY_BADGE: Record<Difficulty, DifficultyBadgeVariant> = {
 };
 
 export const COUNT_PRESETS: readonly number[] = [5, 10, 15, 30];
+
+export const OPERATION_LABELS: Record<OperationKind, string> = {
+  find: "Query",
+  update: "Update",
+};
+
+export const OPERATION_HINTS: Record<OperationKind, string> = {
+  find: "Filter conditions inside find() and findOne().",
+  update: "Modifiers inside updateOne() and updateMany().",
+};
