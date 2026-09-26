@@ -48,9 +48,5 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
-      - name: Create Pages project
-        run: pnpm exec wrangler pages project create mongo-query-quiz --production-branch main
-        continue-on-error: true
-
       - name: Deploy to Cloudflare Pages
         run: pnpm exec wrangler pages deploy --branch main
