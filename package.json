@@ -1,0 +1,45 @@
+{
+  "name": "mongo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "vp run -r dev",
+    "build": "vp run -r build",
+    "check-types": "vp run -r check-types",
+    "check": "vp check && vp run -r check-types",
+    "lint": "vp lint",
+    "format": "vp fmt",
+    "staged": "vp staged",
+    "hooks:setup": "vp config",
+    "dev:web": "vp run --filter web dev:bare",
+    "dev:tui": "vp run --filter tui dev",
+    "dev:server": "vp run --filter hono dev:bare",
+    "db:push": "vp run --filter @mongo/db db:push",
+    "db:studio": "vp run --filter @mongo/db db:studio",
+    "db:generate": "vp run --filter @mongo/db db:generate",
+    "db:migrate": "vp run --filter @mongo/db db:migrate",
+    "deploy": "vp run --filter @mongo/infra deploy",
+    "destroy": "vp run --filter @mongo/infra destroy",
+    "env:generate": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/server/ && varlock codegen --path ./packages/db/",
+    "postinstall": "varlock codegen --path ./apps/web/ && varlock codegen --path ./apps/server/ && varlock codegen --path ./packages/db/"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@mongo/config": "workspace:*",
+    "@types/node": "catalog:",
+    "rolldown": "1.2.7",
+    "typescript": "catalog:",
+    "varlock": "catalog:",
+    "vite-plus": "0.3.1"
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@0.3.1"
+  },
+  "packageManager": "pnpm@12.3.4"
+}
