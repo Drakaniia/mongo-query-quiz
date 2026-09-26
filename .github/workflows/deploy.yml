@@ -12,6 +12,9 @@ concurrency:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://mongo-query-quiz.pages.dev
     env:
       NODE_ENV: production
       # Required by apps/web/.env.schema even though the quiz never reads it

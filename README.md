@@ -1,153 +1,97 @@
-# mongo
+# mongo-query-quiz
 
-An interactive MongoDB query and update practice quiz. Each problem presents a real-world task
-and its SQL equivalent; you translate it into MongoDB shell syntax and get structural, per-rubric
-feedback on the query you wrote. The grading engine lives in `packages/quiz` (`@mongo/quiz`) and is
-UI-independent and unit-tested.
+[![Deploy](https://github.com/Drakaniia/mongo-query-quiz/actions/workflows/deploy.yml/badge.svg)](https://github.com/Drakaniia/mongo-query-quiz/actions/workflows/deploy.yml)
 
-## Features
+**Live:** [mongo-query-quiz.pages.dev](https://mongo-query-quiz.pages.dev)
 
-- **TypeScript** - For type safety and improved developer experience
-- **React Router** - Declarative routing for React
-- **TailwindCSS** - Utility-first CSS for rapid UI development
-- **Shared UI package** - shadcn/ui primitives live in `packages/ui`
-- **Hono** - Lightweight, performant server framework
-- **Node.js** - Runtime environment
-- **Prisma** - TypeScript-first ORM
-- **PostgreSQL** - Database engine
-- **Vite+** - Unified Vite toolchain, workspace task runner, linting, and formatting
+An interactive MongoDB query and update practice quiz. Each problem gives you a real-world task and
+its SQL equivalent; you translate it into MongoDB shell syntax and get structural, per-rubric
+feedback on the query you wrote.
 
-## Getting Started
+The whole quiz runs in the browser. There is no API call and no database — answers are graded
+client-side and progress is kept in `localStorage`.
 
-First, install the dependencies:
+## How grading works
+
+`packages/quiz` (`@mongo/quiz`) is a UI-independent engine:
+
+- **Parses** MongoDB shell syntax with a hand-written tokenizer — no `eval`, no `Function`.
+- **Normalizes** equivalent forms, so `{a: 1}` and `{"a": 1}` are treated as the same query.
+- **Grades** against a weighted, per-problem rubric, awarding partial credit per criterion rather
+  than a single pass/fail.
+- **Previews** a `find` against illustrative sample documents so you can check your answer against
+  real output.
+
+## Quick start
 
 ```bash
+corepack enable   # pnpm is pinned via packageManager
 pnpm install
+pnpm run dev:web  # quiz only, http://localhost:5173/quiz
 ```
 
-## Database Setup
+`pnpm install` runs `postinstall`, which generates the typed `src/env.ts` accessors for every
+workspace from its `.env.schema`. It validates schemas, not values, so a fresh clone with no `.env`
+files succeeds.
 
-Generate the Prisma client before development, typechecking, or building, including in CI and deployment builds. Run this again after changing the Prisma schema:
+The quiz needs no database. `pnpm run dev` additionally starts the Hono API on port 3000, which
+does require `DATABASE_URL` in `apps/server/.env` — prefer `dev:web` for quiz work.
 
-```bash
-pnpm run db:generate
-```
-
-Alchemy provisions Prisma Postgres, passes its connection credentials directly to the deployed application, and manages database deployment in the same stack as the consuming app. You do not need to copy a hosted `DATABASE_URL` into the app environment.
-
-The scaffold includes an initial Prisma migration when generated models need one. Create and commit later migrations with `pnpm run db:migrate`; deployment applies checked-in migrations with `prisma migrate deploy`.
-
-Then, run the development server:
-
-```bash
-pnpm run dev
-```
-
-Open [http://localhost:5173](http://localhost:5173) in your browser to see the web application.
-The API is running at [http://localhost:3000](http://localhost:3000).
-
-## UI Customization
-
-React web apps in this stack share shadcn/ui primitives through `packages/ui`.
-
-- Change design tokens and global styles in `packages/ui/src/styles/globals.css`
-- Update shared primitives in `packages/ui/src/components/*`
-- Adjust shadcn aliases or style config in `packages/ui/components.json` and `apps/web/components.json`
-
-### Add more shared components
-
-Run this from the project root to add more primitives to the shared UI package:
-
-```bash
-npx shadcn@latest add accordion dialog popover sheet table -c packages/ui
-```
-
-Import shared components like this:
-
-```tsx
-import { Button } from "@mongo/ui/components/button";
-```
-
-### Add app-specific blocks
-
-If you want to add app-specific blocks instead of shared primitives, run the shadcn CLI from `apps/web`.
-
-## Environment Configuration
-
-Each app owns its environment schema in `.env.schema`. Varlock generates `src/env.ts` during installation; run `pnpm run env:generate` after changing a schema. Commit schemas, and keep secrets in ignored env files or your deployment platform.
-
-Import the generated `ENV` accessor in application code. Shared database and auth packages receive configuration or initialized clients from the application. See [Varlock's monorepo guide](https://varlock.dev/guides/monorepos/).
-
-Bun's automatic env loading is disabled in `bunfig.toml`; the framework integration or server bootstrap loads Varlock. Node deployments must include Varlock and its dependencies alongside the app schema.
-
-Run standalone Node/Bun tools that use Varlock from the owning app directory so they load that app's schema and env files. `env:generate` only generates TypeScript files; it does not initialize environment values in a subsequent command.
-
-## Deployment
-
-### Alchemy
-
-- Target: web on Prisma + server on Prisma
-- Configure provider accounts: `cd packages/infra && pnpm exec alchemy profile edit`
-- Dev: pnpm run dev
-- Deploy: pnpm run deploy
-- Destroy: pnpm run destroy
-
-`alchemy profile edit` stores the selected Axiom, Cloudflare, Neon, PlanetScale, and/or Prisma provider profiles under `~/.alchemy`; no provider-specific setup command is required by this scaffold.
-
-Deploys are staged and default to a personal `dev_<username>` stage. For production, run the deploy with an explicit stage from `packages/infra`:
-
-```bash
-cd packages/infra && pnpm exec alchemy deploy --stage production
-```
-
-### Production origins
-
-- Required after the first deploy: set `CORS_ORIGIN` in `apps/server/.env` to the exact deployed web origin, such as `https://app.example.com`, then deploy the server again.
-
-## Git Hooks and Formatting
-
-- Optional native Vite+ hooks: `pnpm run hooks:setup`
-- Docs: [Vite+ commit hooks](https://viteplus.dev/guide/commit-hooks)
-- Run checks: `pnpm run check`
-
-## Project Structure
+## Project structure
 
 ```
 mongo/
 ├── apps/
-│   ├── web/         # Frontend application (React + React Router)
-│   └── server/      # Backend API (Hono)
+│   ├── web/         # React Router SPA (the only thing deployed)
+│   └── server/      # Hono API — a stub, unused by the quiz
 ├── packages/
-│   ├── quiz/        # MongoDB query parser, rubric grader, problem bank (Vitest-tested)
-│   ├── ui/          # Shared shadcn/ui components and styles
-│   └── db/          # Database schema & queries
+│   ├── quiz/        # Parser, normalizer, rubric grader, problem bank
+│   ├── ui/          # Shared shadcn/ui primitives
+│   ├── db/          # Prisma schema (no models yet)
+│   └── infra/       # Alchemy stack (unused — see Deployment)
 ```
 
-## Practice Quiz
+The quiz UI lives in `apps/web/src/features/quiz`: session setup, a two-pane problem/answer
+experience, and the session summary.
 
-The quiz lives at `/quiz`.
+## Scripts
 
-- `packages/quiz` parses MongoDB shell syntax (no `eval`), normalizes equivalences, grades against
-  a weighted per-problem rubric with partial credit, and can preview a `find` against illustrative
-  sample documents.
-- `apps/web/src/features/quiz` renders the setup screen, the two-pane problem/answer experience,
-  and the session summary. Progress (best scores, revealed hints) is stored in `localStorage`.
-- Run the engine's tests with `pnpm --filter @mongo/quiz test`.
+| Command                        | Does                                              |
+| ------------------------------ | ------------------------------------------------- |
+| `pnpm run dev:web`             | Web app only (no database needed)                 |
+| `pnpm run dev`                 | Web app + API in parallel                         |
+| `pnpm run build:web`           | Build the SPA to `apps/web/build/client`          |
+| `pnpm run test`                | Vitest suites (currently `@mongo/quiz`)           |
+| `pnpm run check`               | Format/lint plus workspace typechecking           |
+| `pnpm run preview:pages`       | Serve the built SPA through `wrangler pages dev`  |
+| `pnpm run deploy:pages`        | Build and deploy to Cloudflare Pages (Linux only) |
+| `pnpm run env:generate`        | Regenerate `src/env.ts` after editing a schema    |
 
-## Available Scripts
+To run the engine's tests on their own: `pnpm --filter @mongo/quiz test`.
 
-- `pnpm run dev`: Start all applications in development mode
-- `pnpm run build`: Build all applications
-- `pnpm run dev:web`: Start only the web application
-- `pnpm run dev:server`: Start only the server
-- `pnpm run check-types`: Check TypeScript types across all apps
-- `pnpm run db:push`: Push schema changes to database
-- `pnpm run db:generate`: Generate database client/types
-- `pnpm run db:migrate`: Run database migrations
-- `pnpm run db:studio`: Open database studio UI
-- `pnpm run check`: Run Vite+ format/lint checks and workspace TypeScript checks
-- `pnpm run test`: Run the workspace test suites (Vitest, currently `@mongo/quiz`)
-- `pnpm run lint`: Run Vite+ lint checks
-- `pnpm run format`: Run Vite+ formatting
-- `pnpm run staged`: Run Vite+ checks against staged files
-- `pnpm run hooks:setup`: Install Vite+ native Git hooks with `vp config`
+## Deployment
+
+The site is a static SPA on **Cloudflare Pages**, deployed by GitHub Actions on every push to
+`main`. `wrangler.jsonc` is the source of truth: the project name is `mongo-query-quiz` and the
+output directory is `apps/web/build/client`.
+
+The workflow builds on `ubuntu-latest`, asserts the SPA artifact is present, and runs
+`wrangler pages deploy`. It needs two repository secrets: `CLOUDFLARE_API_TOKEN` and
+`CLOUDFLARE_ACCOUNT_ID`.
+
+**Building on Windows does not currently work.** Varlock's CLI aborts during teardown with a libuv
+assertion (`src/win/async.c`), and `@varlock/vite-integration` reports that as an invalid config.
+`pnpm run dev:web` still starts despite printing the spurious error, but `pnpm run build:web` hard
+exits 1. It is an upstream bug, not a repo problem — CI sidesteps it by building on Linux, so use
+CI or WSL for local deploys.
+
+The Alchemy stack in `packages/infra` (`pnpm run deploy`) is unconfigured scaffold. The API it
+would deploy is a stub and the Prisma schema has no models, so nothing in the quiz needs it.
+
+## Environment
+
+Each app owns a `.env.schema`; Varlock generates typed `src/env.ts` accessors from it. Commit
+schemas, keep secrets in gitignored `.env` files or in your deployment platform.
+
+`apps/web` needs `NODE_ENV` and `VITE_SERVER_URL`. `VITE_SERVER_URL` is required by the schema but
+never read by the quiz — the CI workflow sets it to a placeholder to satisfy validation.
