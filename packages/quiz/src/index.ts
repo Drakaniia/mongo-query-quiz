@@ -6,6 +6,13 @@ export { formatValue, formatParsedStatement, formatStatement } from "./format.js
 export { grade, resolveWeight } from "./grade.js";
 export { splitStatement, type StatementSegment } from "./statement.js";
 export {
+  SYNTAX_CHECKLIST,
+  SYNTAX_TEMPLATE,
+  explainSyntaxError,
+  type SyntaxGuidance,
+  type SyntaxHint,
+} from "./syntax-guide.js";
+export {
   matchesFilter,
   previewQuery,
   previewStatement,
