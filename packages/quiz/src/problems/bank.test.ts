@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { grade, parse, resolveWeight, sampleProblems } from "../index.js";
+import { queryOperatorsOf, updateOperatorsOf } from "../filters.js";
 import type { QuizSessionConfig } from "../types.js";
 import { PROBLEM_BANK, countByDifficulty } from "./index.js";
 
@@ -62,6 +63,69 @@ describe("problem bank", () => {
           );
         }
       });
+    });
+  }
+});
+
+describe("easy mode", () => {
+  const easyProblems = PROBLEM_BANK.filter((problem) => problem.difficulty === "easy");
+
+  it("never asks for an ObjectId literal", () => {
+    for (const problem of easyProblems) {
+      const text = [problem.statement, problem.referenceAnswer, ...problem.hints].join("\n");
+      expect(text, problem.id).not.toContain("ObjectId");
+    }
+  });
+
+  it("gives every sample document a short numeric id", () => {
+    for (const problem of easyProblems) {
+      for (const document of problem.sampleDocuments) {
+        expect(typeof document["_id"], problem.id).toBe("number");
+      }
+    }
+  });
+});
+
+describe("bank balance targets", () => {
+  for (const difficulty of ["easy", "moderate"] as const) {
+    it(`splits ${difficulty} evenly between query and update problems`, () => {
+      const items = PROBLEM_BANK.filter((problem) => problem.difficulty === difficulty);
+      const find = items.filter((problem) => problem.operation === "find").length;
+      const update = items.filter((problem) => problem.operation === "update").length;
+      expect({ find, update }).toEqual({ find: 15, update: 15 });
+    });
+  }
+
+  // Every tier must exercise these, otherwise the update-operator filter offers nothing to pick.
+  const REQUIRED_UPDATE_OPERATORS = ["$set", "$unset", "$inc", "$addToSet"] as const;
+
+  for (const operator of REQUIRED_UPDATE_OPERATORS) {
+    it(`covers ${operator} in the easy and moderate tiers`, () => {
+      for (const difficulty of ["easy", "moderate"] as const) {
+        const items = PROBLEM_BANK.filter(
+          (problem) => problem.difficulty === difficulty && problem.operation === "update",
+        );
+        const covered = items.filter((problem) => updateOperatorsOf(problem).includes(operator));
+        expect(covered.length, `${difficulty} is missing ${operator}`).toBeGreaterThan(0);
+      }
+    });
+  }
+
+  // Rebalancing moved problems out of the query side, so pin the query coverage it costs.
+  const QUERY_COVERAGE: Record<string, Record<string, number>> = {
+    easy: { $gt: 4, $gte: 4, $lt: 2, $lte: 1 },
+    moderate: { $ne: 1, $gt: 3, $gte: 4, $lt: 2, $lte: 2, $in: 4, $nin: 2, $regex: 2, $options: 1 },
+  };
+
+  for (const [difficulty, expected] of Object.entries(QUERY_COVERAGE)) {
+    it(`keeps ${difficulty} query operator coverage intact`, () => {
+      const items = PROBLEM_BANK.filter(
+        (problem) => problem.difficulty === difficulty && problem.operation === "find",
+      );
+      for (const [operator, count] of Object.entries(expected)) {
+        const covered = items.filter((problem) => queryOperatorsOf(problem).includes(operator));
+        expect(covered.length, `${difficulty} ${operator}`).toBe(count);
+      }
     });
   }
 });

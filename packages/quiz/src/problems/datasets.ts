@@ -3,6 +3,15 @@
  * against a database; they exist for display and for the opt-in in-browser preview.
  */
 
+/**
+ * Easy-mode display view of a dataset: `_id` is rewritten to a short numeric record number so
+ * easy problems can ask the learner to match `_id` without writing a 24-character
+ * `ObjectId("...")` literal. The source documents are left untouched for the other difficulties.
+ */
+export function withNumericIds(documents: Record<string, unknown>[]): Record<string, unknown>[] {
+  return documents.map((document, index) => ({ ...document, _id: 101 + index }));
+}
+
 export const PRODUCTS: Record<string, unknown>[] = [
   {
     _id: 1,
@@ -491,4 +500,3 @@ export const INVOICES: Record<string, unknown>[] = [
     lines: [],
   },
 ];
-

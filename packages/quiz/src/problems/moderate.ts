@@ -30,7 +30,11 @@ export const moderateProblems: Problem[] = [
     ],
     referenceAnswer: "db.products.find({ price: { $gte: 20 }, stock: { $lt: 10 } })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -57,7 +61,11 @@ export const moderateProblems: Problem[] = [
     ],
     referenceAnswer: 'db.products.find({ $or: [{ name: { $ne: "Pen" } }, { stock: 0 }] })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -87,7 +95,11 @@ export const moderateProblems: Problem[] = [
     ],
     referenceAnswer: "db.products.find({ stock: { $gte: 5, $lte: 15 } })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -104,25 +116,30 @@ export const moderateProblems: Problem[] = [
     ],
   },
   {
-    id: "moderate-regex-tags",
-    title: "Practice products",
+    id: "moderate-tag-practice-products",
+    title: "Tag the practice products",
     difficulty: "moderate",
-    operation: "find",
+    operation: "update",
     statement:
-      "A landing page shows any product whose tags mention \"practice\". Tags are an array, so match on the pattern anywhere in a tag.",
-    clues: ['any product whose tags mention "practice"'],
-    sql: "SELECT * FROM products WHERE tags LIKE '%practice%';",
+      'Merchandising is archiving the practice products, so every product whose tags mention "practice" has to gain the tag "archive".',
+    clues: ['every product whose tags mention "practice"', 'has to gain the tag "archive"'],
+    sql: "UPDATE products SET tags = 'archive' WHERE tags LIKE '%practice%';",
     collection: "products",
     sampleDocuments: PRODUCTS,
     hints: [
-      "Pattern matching uses a regular expression.",
-      "A regex literal is written `/pattern/`.",
-      "The pattern `practice` matches anywhere in the string.",
+      "Several products match, so the update applies through `updateMany`.",
+      "The filter still needs the regular expression, because `tags` is an array of strings.",
+      'Inside the update, `$addToSet` appends "archive" only where it is missing.',
     ],
-    referenceAnswer: "db.products.find({ tags: /practice/ })",
+    referenceAnswer:
+      'db.products.updateMany({ tags: /practice/ }, { $addToSet: { tags: "archive" } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateMany" } },
       {
         id: "filter",
         label: "Filter condition",
@@ -131,6 +148,11 @@ export const moderateProblems: Problem[] = [
           doc: { tags: rx("practice") },
           variants: [{ tags: { $regex: "practice" } }, { tags: { $regex: rx("practice") } }],
         },
+      },
+      {
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $addToSet: { tags: "archive" } } },
       },
     ],
   },
@@ -153,7 +175,11 @@ export const moderateProblems: Problem[] = [
     referenceAnswer:
       'db.products.find({ category: { $in: ["books", "toys"] }, price: { $nin: [0] } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -171,7 +197,7 @@ export const moderateProblems: Problem[] = [
     difficulty: "moderate",
     operation: "find",
     statement:
-      "A partner integration only supports Gmail addresses. Return every customer whose email ends with \"@gmail.com\", ignoring case.",
+      'A partner integration only supports Gmail addresses. Return every customer whose email ends with "@gmail.com", ignoring case.',
     clues: ['every customer whose email ends with "@gmail.com", ignoring case'],
     sql: "SELECT * FROM customers WHERE email LIKE '%@gmail.com';",
     collection: "customers",
@@ -183,7 +209,11 @@ export const moderateProblems: Problem[] = [
     ],
     referenceAnswer: "db.customers.find({ email: /@gmail\\.com$/i })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "customers" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "customers" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -205,7 +235,7 @@ export const moderateProblems: Problem[] = [
     difficulty: "moderate",
     operation: "update",
     statement:
-      "The order with _id ObjectId(\"66f1a2b3c4d5e6f7a8b9c0d9\") gained a 5 fee. Increase its total by 5 and append \"priority\" to its tags.",
+      'The order with _id ObjectId("66f1a2b3c4d5e6f7a8b9c0d9") gained a 5 fee. Increase its total by 5 and append "priority" to its tags.',
     clues: ['Increase its total by 5 and append "priority" to its tags'],
     sql: "UPDATE orders SET total = total + 5, tags = array_append(tags, 'priority') WHERE _id = '66f1a2b3c4d5e6f7a8b9c0d9';",
     collection: "orders",
@@ -224,7 +254,12 @@ export const moderateProblems: Problem[] = [
         weight: 10,
         expectation: { kind: "collection", name: "orders" },
       },
-      { id: "method", label: "Method", weight: 20, expectation: { kind: "method", method: "updateOne" } },
+      {
+        id: "method",
+        label: "Method",
+        weight: 20,
+        expectation: { kind: "method", method: "updateOne" },
+      },
       {
         id: "filter",
         label: "Filter condition",
@@ -246,7 +281,10 @@ export const moderateProblems: Problem[] = [
     operation: "update",
     statement:
       "Every account still on the trial tier should move to basic. Update all of them in one operation.",
-    clues: ["Every account still on the trial tier should move to basic", "Update all of them in one operation"],
+    clues: [
+      "Every account still on the trial tier should move to basic",
+      "Update all of them in one operation",
+    ],
     sql: "UPDATE customers SET tier = 'basic' WHERE tier = 'trial';",
     collection: "customers",
     sampleDocuments: CUSTOMERS,
@@ -284,34 +322,39 @@ export const moderateProblems: Problem[] = [
     ],
   },
   {
-    id: "moderate-task-projection",
-    title: "Low stock shortlist",
+    id: "moderate-clear-low-stock-flags",
+    title: "Clear the low stock flags",
     difficulty: "moderate",
-    operation: "find",
+    operation: "update",
     statement:
-      "Find products whose stock is not greater than 10, and show only the name and stock of each one.",
-    clues: ["products whose stock is not greater than 10", "only the name and stock of each one"],
-    sql: "SELECT name, stock FROM products WHERE stock <= 10;",
+      "The clearance project finished, so the lowStock marker has to be dropped from every product whose stock is not greater than 10.",
+    clues: ["the lowStock marker has to be dropped", "whose stock is not greater than 10"],
+    sql: "UPDATE products SET lowStock = NULL WHERE stock <= 10;",
     collection: "products",
     sampleDocuments: PRODUCTS,
     hints: [
-      "\"Not greater than\" means less than or equal to: `$lte`.",
-      "Add a projection as the second argument.",
-      "Include `name` and `stock` with `1`.",
+      "Every low-stock product is affected, so use `updateMany`.",
+      '"Not greater than" is less than or equal to, so the filter is `{ stock: { $lte: 10 } }`.',
+      "`$unset` removes the field entirely; its operand is just an empty string.",
     ],
-    referenceAnswer: "db.products.find({ stock: { $lte: 10 } }, { name: 1, stock: 1 })",
+    referenceAnswer:
+      'db.products.updateMany({ stock: { $lte: 10 } }, { $unset: { lowStock: "" } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateMany" } },
       {
         id: "filter",
         label: "Filter condition",
         expectation: { kind: "filter", doc: { stock: { $lte: 10 } } },
       },
       {
-        id: "projection",
-        label: "Projection",
-        expectation: { kind: "projection", doc: { name: 1, stock: 1 } },
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $unset: { lowStock: "" } } },
       },
     ],
   },
@@ -322,7 +365,10 @@ export const moderateProblems: Problem[] = [
     operation: "find",
     statement:
       "A promo feed shows products that are either very cheap or very well loved. Return name and price for products priced under 10 or rated above 4.8.",
-    clues: ["either very cheap or very well loved", "for products priced under 10 or rated above 4.8"],
+    clues: [
+      "either very cheap or very well loved",
+      "for products priced under 10 or rated above 4.8",
+    ],
     sql: "SELECT name, price FROM products WHERE price < 10 OR rating > 4.8;",
     collection: "products",
     sampleDocuments: PRODUCTS,
@@ -334,7 +380,11 @@ export const moderateProblems: Problem[] = [
     referenceAnswer:
       "db.products.find({ $or: [{ price: { $lt: 10 } }, { rating: { $gt: 4.8 } }] }, { name: 1, price: 1 })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -446,29 +496,33 @@ export const moderateProblems: Problem[] = [
     ],
   },
   {
-    id: "moderate-employee-skills-regex",
-    title: "Engineers with leadership skills",
+    id: "moderate-drop-leadership-skill",
+    title: "Retire the leadership skill",
     difficulty: "moderate",
-    operation: "find",
+    operation: "update",
     statement:
-      "A skills matrix is being rebuilt and needs every engineer whose skills list mentions leadership. Return those employees.",
-    clues: ["every engineer whose skills list mentions leadership"],
-    sql: "SELECT * FROM employees WHERE department = 'engineering' AND skills LIKE '%leadership%';",
+      "The skills matrix was rebuilt without the leadership entry, so leadership has to be pulled from the skills list of every engineer whose skills list mentions leadership.",
+    clues: [
+      "leadership has to be pulled from the skills list",
+      "of every engineer whose skills list mentions leadership",
+    ],
+    sql: "UPDATE employees SET skills = skills - 'leadership' WHERE department = 'engineering' AND skills LIKE '%leadership%';",
     collection: "employees",
     sampleDocuments: EMPLOYEES,
     hints: [
-      "`skills` is an array, so the pattern may match any element.",
-      "Add a `department` equality alongside the pattern match.",
-      "The pattern `leadership` needs no anchors.",
+      "More than one engineer can match, so use `updateMany`.",
+      "`$pull` removes a value from an array field wherever it appears in that array.",
+      'Inside the update, `{ $pull: { skills: "leadership" } }` takes the entry back out.',
     ],
-    referenceAnswer: 'db.employees.find({ department: "engineering", skills: /leadership/ })',
+    referenceAnswer:
+      'db.employees.updateMany({ department: "engineering", skills: /leadership/ }, { $pull: { skills: "leadership" } })',
     rubric: [
       {
         id: "collection",
         label: "Collection",
         expectation: { kind: "collection", name: "employees" },
       },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateMany" } },
       {
         id: "filter",
         label: "Filter condition",
@@ -480,6 +534,11 @@ export const moderateProblems: Problem[] = [
             { department: "engineering", skills: { $regex: rx("leadership") } },
           ],
         },
+      },
+      {
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $pull: { skills: "leadership" } } },
       },
     ],
   },
@@ -496,7 +555,7 @@ export const moderateProblems: Problem[] = [
     sampleDocuments: EMPLOYEES,
     hints: [
       "An absolute value goes in `$set`; a relative change goes in `$inc`.",
-      "Filter on `{ name: \"Tomas Nilsen\" }`.",
+      'Filter on `{ name: "Tomas Nilsen" }`.',
       "Both operators can share one update document.",
     ],
     referenceAnswer:
@@ -508,7 +567,12 @@ export const moderateProblems: Problem[] = [
         weight: 10,
         expectation: { kind: "collection", name: "employees" },
       },
-      { id: "method", label: "Method", weight: 20, expectation: { kind: "method", method: "updateOne" } },
+      {
+        id: "method",
+        label: "Method",
+        weight: 20,
+        expectation: { kind: "method", method: "updateOne" },
+      },
       {
         id: "filter",
         label: "Filter condition",
@@ -545,7 +609,11 @@ export const moderateProblems: Problem[] = [
     referenceAnswer:
       "db.reviews.find({ rating: { $lte: 3 }, verified: false }, { productId: 1, rating: 1, verified: 1 })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "reviews" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "reviews" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -564,29 +632,33 @@ export const moderateProblems: Problem[] = [
     ],
   },
   {
-    id: "moderate-review-verified-product-set",
-    title: "Publishable reviews for three products",
+    id: "moderate-flag-shortlist-reviews",
+    title: "Flag reviews on the shortlist",
     difficulty: "moderate",
-    operation: "find",
+    operation: "update",
     statement:
-      "Only verified feedback for a shortlist of products is publishable. Return the productId, customer and rating of every verified review of P-100, P-102 and P-103.",
+      "The shortlist is under legal review, so the flag shortlistReview has to be set on every verified review of P-100, P-102 and P-103.",
     clues: [
+      "the flag shortlistReview has to be set",
       "every verified review of P-100, P-102 and P-103",
-      "the productId, customer and rating",
     ],
-    sql: "SELECT productId, customer, rating FROM reviews WHERE verified = TRUE AND productId IN ('P-100','P-102','P-103');",
+    sql: "UPDATE reviews SET shortlistReview = 1 WHERE verified = TRUE AND productId IN ('P-100','P-102','P-103');",
     collection: "reviews",
     sampleDocuments: REVIEWS,
     hints: [
+      "Several reviews can match, so use `updateMany`.",
       "A list of allowed values is matched with `$in`.",
-      "Combine `verified: true` with the product list.",
-      "Project `{ productId: 1, customer: 1, rating: 1 }` as the second argument.",
+      "Combine `verified: true` with the product list in the filter, then write the flag with `$set`.",
     ],
     referenceAnswer:
-      'db.reviews.find({ verified: true, productId: { $in: ["P-100", "P-102", "P-103"] } }, { productId: 1, customer: 1, rating: 1 })',
+      'db.reviews.updateMany({ verified: true, productId: { $in: ["P-100", "P-102", "P-103"] } }, { $set: { shortlistReview: true } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "reviews" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "reviews" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateMany" } },
       {
         id: "filter",
         label: "Filter condition",
@@ -596,13 +668,9 @@ export const moderateProblems: Problem[] = [
         },
       },
       {
-        id: "projection",
-        label: "Projection",
-        expectation: {
-          kind: "projection",
-          doc: { productId: 1, customer: 1, rating: 1 },
-          variants: [{ productId: 1, customer: 1, rating: 1, _id: 0 }],
-        },
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $set: { shortlistReview: true } } },
       },
     ],
   },
@@ -627,7 +695,11 @@ export const moderateProblems: Problem[] = [
     ],
     referenceAnswer: "db.reviews.find({ customer: /@example\\.com/ }, { customer: 1, rating: 1 })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "reviews" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "reviews" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -653,42 +725,42 @@ export const moderateProblems: Problem[] = [
     ],
   },
   {
-    id: "moderate-ticket-urgent-queue",
-    title: "The urgent open queue",
+    id: "moderate-page-duty-manager",
+    title: "Page the duty manager",
     difficulty: "moderate",
-    operation: "find",
+    operation: "update",
     statement:
-      "The duty manager only wants the urgent queue. Return the subject, status and assignee of every ticket that is still open with an urgent priority.",
+      "The duty manager was paged, so the assignee of every ticket that is still open with an urgent priority has to become the address on-call@helpdesk.com.",
     clues: [
       "every ticket that is still open with an urgent priority",
-      "the subject, status and assignee",
+      "has to become the address on-call@helpdesk.com",
     ],
-    sql: "SELECT subject, status, assignee FROM tickets WHERE status = 'open' AND priority = 'urgent';",
+    sql: "UPDATE tickets SET assignee = 'on-call@helpdesk.com' WHERE status = 'open' AND priority = 'urgent';",
     collection: "tickets",
     sampleDocuments: TICKETS,
     hints: [
+      "Several tickets can match, so use `updateMany`.",
       "Two equalities on different fields are combined with an implicit AND.",
-      "Filter on both `status` and `priority`.",
-      "Project `{ subject: 1, status: 1, assignee: 1 }` as the second argument.",
+      'Write the new address with `$set`, so `{ $set: { assignee: "on-call@helpdesk.com" } }`.',
     ],
     referenceAnswer:
-      'db.tickets.find({ status: "open", priority: "urgent" }, { subject: 1, status: 1, assignee: 1 })',
+      'db.tickets.updateMany({ status: "open", priority: "urgent" }, { $set: { assignee: "on-call@helpdesk.com" } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "tickets" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "tickets" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateMany" } },
       {
         id: "filter",
         label: "Filter condition",
         expectation: { kind: "filter", doc: { status: "open", priority: "urgent" } },
       },
       {
-        id: "projection",
-        label: "Projection",
-        expectation: {
-          kind: "projection",
-          doc: { subject: 1, status: 1, assignee: 1 },
-          variants: [{ subject: 1, status: 1, assignee: 1, _id: 0 }],
-        },
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $set: { assignee: "on-call@helpdesk.com" } } },
       },
     ],
   },
@@ -708,13 +780,17 @@ export const moderateProblems: Problem[] = [
     sampleDocuments: TICKETS,
     hints: [
       "`$in` matches any value in a list; `$nin` excludes a list of values.",
-      "Use `{ $in: [\"email\", \"phone\"] }` on `channel`.",
-      "Use `{ $nin: [\"closed\"] }` to skip finished work.",
+      'Use `{ $in: ["email", "phone"] }` on `channel`.',
+      'Use `{ $nin: ["closed"] }` to skip finished work.',
     ],
     referenceAnswer:
       'db.tickets.find({ channel: { $in: ["email", "phone"] }, status: { $nin: ["closed"] } }, { _id: 1, subject: 1, channel: 1 })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "tickets" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "tickets" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -756,7 +832,11 @@ export const moderateProblems: Problem[] = [
     referenceAnswer:
       'db.tickets.find({ $or: [{ assignee: null }, { channel: "chat" }] }, { subject: 1, channel: 1, assignee: 1 })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "tickets" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "tickets" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -793,7 +873,7 @@ export const moderateProblems: Problem[] = [
     sampleDocuments: TICKETS,
     hints: [
       "`$push` appends one value to an array field.",
-      "Filter on `{ status: \"pending\", priority: \"medium\" }`.",
+      'Filter on `{ status: "pending", priority: "medium" }`.',
       "The pushed value goes inside the `$push` document.",
     ],
     referenceAnswer:
@@ -805,7 +885,12 @@ export const moderateProblems: Problem[] = [
         weight: 10,
         expectation: { kind: "collection", name: "tickets" },
       },
-      { id: "method", label: "Method", weight: 20, expectation: { kind: "method", method: "updateOne" } },
+      {
+        id: "method",
+        label: "Method",
+        weight: 20,
+        expectation: { kind: "method", method: "updateOne" },
+      },
       {
         id: "filter",
         label: "Filter condition",
@@ -836,7 +921,7 @@ export const moderateProblems: Problem[] = [
     sampleDocuments: TICKETS,
     hints: [
       "Use `updateMany` so every matching ticket changes together.",
-      "Combine `status: \"open\"` with `assignee: null`.",
+      'Combine `status: "open"` with `assignee: null`.',
       "The new priority goes inside `$set`.",
     ],
     referenceAnswer:
@@ -869,44 +954,42 @@ export const moderateProblems: Problem[] = [
     ],
   },
   {
-    id: "moderate-session-abandoned-web",
-    title: "Abandoned web sessions",
+    id: "moderate-clear-abandoned-referrer",
+    title: "Clear the referrer on abandoned web visits",
     difficulty: "moderate",
-    operation: "find",
+    operation: "update",
     statement:
-      "Product analytics wants the web sessions that never finished. Return the userId, device, durationMins and pagesViewed of every visit that ran on the web and was not completed.",
+      "Privacy review is done, so the referrer field has to be removed from every visit that ran on the web and was not completed.",
     clues: [
+      "the referrer field has to be removed",
       "every visit that ran on the web and was not completed",
-      "the userId, device, durationMins and pagesViewed",
     ],
-    sql: "SELECT userId, device, durationMins, pagesViewed FROM sessions WHERE device = 'web' AND completed = FALSE;",
+    sql: "UPDATE sessions SET referrer = NULL WHERE device = 'web' AND completed = FALSE;",
     collection: "sessions",
     sampleDocuments: SESSIONS,
     hints: [
+      "More than one visit can match, so use `updateMany`.",
       "Two top-level keys are combined with an implicit AND.",
-      '"Not completed" is the boolean `completed: false`.',
-      "Project the four requested fields as the second argument.",
+      "`$unset` removes the field entirely; its operand is just an empty string.",
     ],
     referenceAnswer:
-      "db.sessions.find({ device: \"web\", completed: false }, { userId: 1, device: 1, durationMins: 1, pagesViewed: 1 })",
+      'db.sessions.updateMany({ device: "web", completed: false }, { $unset: { referrer: "" } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "sessions" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "sessions" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateMany" } },
       {
         id: "filter",
         label: "Filter condition",
         expectation: { kind: "filter", doc: { device: "web", completed: false } },
       },
       {
-        id: "projection",
-        label: "Projection",
-        expectation: {
-          kind: "projection",
-          doc: { userId: 1, device: 1, durationMins: 1, pagesViewed: 1 },
-          variants: [
-            { userId: 1, device: 1, durationMins: 1, pagesViewed: 1, _id: 0 },
-          ],
-        },
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $unset: { referrer: "" } } },
       },
     ],
   },
@@ -932,7 +1015,11 @@ export const moderateProblems: Problem[] = [
     referenceAnswer:
       'db.sessions.find({ device: { $in: ["ios", "android"] }, durationMins: { $gte: 30 } }, { userId: 1, device: 1, durationMins: 1 })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "sessions" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "sessions" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -981,7 +1068,12 @@ export const moderateProblems: Problem[] = [
         weight: 10,
         expectation: { kind: "collection", name: "sessions" },
       },
-      { id: "method", label: "Method", weight: 20, expectation: { kind: "method", method: "updateOne" } },
+      {
+        id: "method",
+        label: "Method",
+        weight: 20,
+        expectation: { kind: "method", method: "updateOne" },
+      },
       {
         id: "filter",
         label: "Filter condition",
@@ -997,42 +1089,42 @@ export const moderateProblems: Problem[] = [
     ],
   },
   {
-    id: "moderate-invoice-settled-eur",
-    title: "Settled euro invoices",
+    id: "moderate-stamp-settled-invoices",
+    title: "Stamp the settlement date",
     difficulty: "moderate",
-    operation: "find",
+    operation: "update",
     statement:
-      "Finance reconciles settled invoices only, and only in euro. Return the customerId, amount and status of every invoice that is already paid and denominated in EUR.",
+      "Every invoice that is already paid and denominated in EUR has to be stamped with the moment it was settled, recorded in a settledAt field as the current date and time.",
     clues: [
-      "every invoice that is already paid and denominated in EUR",
-      "the customerId, amount and status",
+      "Every invoice that is already paid and denominated in EUR",
+      "recorded in a settledAt field as the current date and time",
     ],
-    sql: "SELECT customerId, amount, status FROM invoices WHERE status = 'paid' AND currency = 'EUR';",
+    sql: "UPDATE invoices SET settledAt = CURRENT_TIMESTAMP WHERE status = 'paid' AND currency = 'EUR';",
     collection: "invoices",
     sampleDocuments: INVOICES,
     hints: [
+      "Several invoices are settled, so use `updateMany`.",
       "Two equalities on different fields are combined with an implicit AND.",
-      "Filter on `status` and on `currency`.",
-      "Project `{ customerId: 1, amount: 1, status: 1 }` as the second argument.",
+      "`$currentDate` writes the server's current date and time, so the operand is `true`.",
     ],
     referenceAnswer:
-      'db.invoices.find({ status: "paid", currency: "EUR" }, { customerId: 1, amount: 1, status: 1 })',
+      'db.invoices.updateMany({ status: "paid", currency: "EUR" }, { $currentDate: { settledAt: true } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "invoices" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "invoices" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateMany" } },
       {
         id: "filter",
         label: "Filter condition",
         expectation: { kind: "filter", doc: { status: "paid", currency: "EUR" } },
       },
       {
-        id: "projection",
-        label: "Projection",
-        expectation: {
-          kind: "projection",
-          doc: { customerId: 1, amount: 1, status: 1 },
-          variants: [{ customerId: 1, amount: 1, status: 1, _id: 0 }],
-        },
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $currentDate: { settledAt: true } } },
       },
     ],
   },
@@ -1059,7 +1151,11 @@ export const moderateProblems: Problem[] = [
     referenceAnswer:
       'db.invoices.find({ status: { $in: ["unpaid", "overdue"] }, amount: { $gt: 1000 } }, { _id: 1, amount: 1, status: 1 })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "invoices" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "invoices" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -1086,13 +1182,16 @@ export const moderateProblems: Problem[] = [
     operation: "update",
     statement:
       "Every unpaid invoice worth more than 400 has now missed its deadline. Mark all of them as overdue in a single operation.",
-    clues: ["Every unpaid invoice worth more than 400", "Mark all of them as overdue in a single operation"],
+    clues: [
+      "Every unpaid invoice worth more than 400",
+      "Mark all of them as overdue in a single operation",
+    ],
     sql: "UPDATE invoices SET status = 'overdue' WHERE status = 'unpaid' AND amount > 400;",
     collection: "invoices",
     sampleDocuments: INVOICES,
     hints: [
       "Use `updateMany` so every matching invoice changes together.",
-      "Combine `status: \"unpaid\"` with a `$gt` on `amount`.",
+      'Combine `status: "unpaid"` with a `$gt` on `amount`.',
       "The new status goes inside `$set`.",
     ],
     referenceAnswer:
@@ -1146,7 +1245,11 @@ export const moderateProblems: Problem[] = [
     referenceAnswer:
       'db.orders.find({ status: "pending", total: { $gt: 100 } }, { _id: 1, customerId: 1, total: 1 })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "orders" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "orders" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -1164,29 +1267,33 @@ export const moderateProblems: Problem[] = [
     ],
   },
   {
-    id: "moderate-customer-loyalty-cities",
-    title: "Loyalty campaign shortlist",
+    id: "moderate-double-loyalty-points",
+    title: "Double loyalty points for the campaign",
     difficulty: "moderate",
-    operation: "find",
+    operation: "update",
     statement:
-      "A loyalty campaign targets our strongest members in two cities. Return the name, tier and city of every customer who is on the gold or pro tier and lives in either London or Berlin.",
+      "The loyalty campaign doubles the points of every customer who is on the gold or pro tier and lives in either London or Berlin.",
     clues: [
-      "every customer who is on the gold or pro tier and lives in either London or Berlin",
-      "the name, tier and city",
+      "doubles the points of every customer who is on the gold or pro tier",
+      "and lives in either London or Berlin",
     ],
-    sql: "SELECT name, tier, city FROM customers WHERE tier IN ('gold','pro') AND city IN ('London','Berlin');",
+    sql: "UPDATE customers SET loyaltyPoints = loyaltyPoints * 2 WHERE tier IN ('gold','pro') AND city IN ('London','Berlin');",
     collection: "customers",
     sampleDocuments: CUSTOMERS,
     hints: [
-      "Each of the two allowed-value lists is matched with `$in`.",
-      "Combine the tier list and the city list at the top level.",
-      "Project `{ name: 1, tier: 1, city: 1 }` as the second argument.",
+      "More than one customer can match, so use `updateMany`.",
+      "Each of the two allowed-value lists is matched with `$in`, combined at the top level.",
+      "`$mul` multiplies the current value, so doubling points is `{ $mul: { loyaltyPoints: 2 } }`.",
     ],
     referenceAnswer:
-      'db.customers.find({ tier: { $in: ["gold", "pro"] }, city: { $in: ["London", "Berlin"] } }, { name: 1, tier: 1, city: 1 })',
+      'db.customers.updateMany({ tier: { $in: ["gold", "pro"] }, city: { $in: ["London", "Berlin"] } }, { $mul: { loyaltyPoints: 2 } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "customers" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "customers" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateMany" } },
       {
         id: "filter",
         label: "Filter condition",
@@ -1196,13 +1303,9 @@ export const moderateProblems: Problem[] = [
         },
       },
       {
-        id: "projection",
-        label: "Projection",
-        expectation: {
-          kind: "projection",
-          doc: { name: 1, tier: 1, city: 1 },
-          variants: [{ name: 1, tier: 1, city: 1, _id: 0 }],
-        },
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $mul: { loyaltyPoints: 2 } } },
       },
     ],
   },

@@ -1,5 +1,4 @@
 import type { Problem } from "../types.js";
-import { objectId } from "../values.js";
 import {
   CUSTOMERS,
   EMPLOYEES,
@@ -9,7 +8,16 @@ import {
   REVIEWS,
   SESSIONS,
   TICKETS,
+  withNumericIds,
 } from "./datasets.js";
+
+/**
+ * Easy problems show short numeric ids, so matching `_id` never asks a beginner to write a
+ * 24-character `ObjectId(...)` literal. The shared datasets keep their ObjectId values for the
+ * moderate and difficult problems.
+ */
+const CUSTOMERS_SIMPLE = withNumericIds(CUSTOMERS);
+const ORDERS_SIMPLE = withNumericIds(ORDERS);
 
 export const easyProblems: Problem[] = [
   {
@@ -26,11 +34,15 @@ export const easyProblems: Problem[] = [
     hints: [
       "Start with `db.products.find(...)`.",
       "An equality filter is a document of `{ field: value }`.",
-      "Filter on `category` with the string \"books\".",
+      'Filter on `category` with the string "books".',
     ],
     referenceAnswer: 'db.products.find({ category: "books" })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -52,12 +64,16 @@ export const easyProblems: Problem[] = [
     sampleDocuments: PRODUCTS,
     hints: [
       "Comparison operators live inside the field value.",
-      "The \"less than\" operator is `$lt`.",
+      'The "less than" operator is `$lt`.',
       "Write `{ price: { $lt: 20 } }`.",
     ],
     referenceAnswer: "db.products.find({ price: { $lt: 20 } })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -67,29 +83,38 @@ export const easyProblems: Problem[] = [
     ],
   },
   {
-    id: "easy-order-status",
-    title: "Shipped orders",
+    id: "easy-drop-order-version",
+    title: "Retire the order version field",
     difficulty: "easy",
-    operation: "find",
+    operation: "update",
     statement:
-      "Support wants a list of every order that has already shipped so they can confirm delivery windows.",
-    clues: ["every order that has already shipped"],
-    sql: "SELECT * FROM orders WHERE status = 'shipped';",
+      "The order team no longer tracks revisions, so the version field must be removed from every order that has already shipped.",
+    clues: ["the version field must be removed from every order that has already shipped"],
+    sql: "UPDATE orders SET version = NULL WHERE status = 'shipped';",
     collection: "orders",
-    sampleDocuments: ORDERS,
+    sampleDocuments: ORDERS_SIMPLE,
     hints: [
-      "The documents live in the `orders` collection.",
-      "Filter with an equality match.",
-      "Match `status` against the string \"shipped\".",
+      "More than one order matches, so use `db.orders.updateMany(filter, update)`.",
+      "The `$unset` operator deletes a field.",
+      '`$unset` ignores its operand, so the convention is an empty string: `{ $unset: { version: "" } }`.',
     ],
-    referenceAnswer: 'db.orders.find({ status: "shipped" })',
+    referenceAnswer: 'db.orders.updateMany({ status: "shipped" }, { $unset: { version: "" } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "orders" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "orders" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateMany" } },
       {
         id: "filter",
         label: "Filter condition",
         expectation: { kind: "filter", doc: { status: "shipped" } },
+      },
+      {
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $unset: { version: "" } } },
       },
     ],
   },
@@ -99,19 +124,23 @@ export const easyProblems: Problem[] = [
     difficulty: "easy",
     operation: "find",
     statement:
-      "A support agent opens a single customer profile from the CRM. Fetch the one customer whose _id is ObjectId(\"66f1a2b3c4d5e6f7a8b9c0d1\").",
-    clues: ["the one customer whose _id is ObjectId(\"66f1a2b3c4d5e6f7a8b9c0d1\")"],
-    sql: "SELECT * FROM customers WHERE _id = '66f1a2b3c4d5e6f7a8b9c0d1';",
+      "A support agent opens a single customer profile from the CRM. Fetch the one customer whose _id is 101.",
+    clues: ["the one customer whose _id is 101"],
+    sql: "SELECT * FROM customers WHERE _id = 101;",
     collection: "customers",
-    sampleDocuments: CUSTOMERS,
+    sampleDocuments: CUSTOMERS_SIMPLE,
     hints: [
       "When you expect at most one document, `findOne` is the natural method.",
-      "Wrap the id literal in `ObjectId(...)`.",
+      "The id is the short number 101, so match `_id` with the plain value from the sample documents.",
       "There is exactly one match, so `find` is also accepted here.",
     ],
-    referenceAnswer: 'db.customers.findOne({ _id: ObjectId("66f1a2b3c4d5e6f7a8b9c0d1") })',
+    referenceAnswer: "db.customers.findOne({ _id: 101 })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "customers" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "customers" },
+      },
       {
         id: "method",
         label: "Method",
@@ -120,7 +149,7 @@ export const easyProblems: Problem[] = [
       {
         id: "filter",
         label: "Filter condition",
-        expectation: { kind: "filter", doc: { _id: objectId("66f1a2b3c4d5e6f7a8b9c0d1") } },
+        expectation: { kind: "filter", doc: { _id: 101 } },
       },
     ],
   },
@@ -134,7 +163,7 @@ export const easyProblems: Problem[] = [
     clues: ["just the name and email of every customer"],
     sql: "SELECT name, email FROM customers;",
     collection: "customers",
-    sampleDocuments: CUSTOMERS,
+    sampleDocuments: CUSTOMERS_SIMPLE,
     hints: [
       "Projection is the second argument to `find`.",
       "Include a field by setting it to `1`.",
@@ -142,7 +171,11 @@ export const easyProblems: Problem[] = [
     ],
     referenceAnswer: "db.customers.find({}, { name: 1, email: 1 })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "customers" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "customers" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "projection",
@@ -161,11 +194,11 @@ export const easyProblems: Problem[] = [
     difficulty: "easy",
     operation: "update",
     statement:
-      "A customer asked to be removed from all campaigns. Set the active flag of the account with email \"carol@example.com\" to false.",
-    clues: ["Set the active flag of the account with email \"carol@example.com\" to false"],
+      'A customer asked to be removed from all campaigns. Set the active flag of the account with email "carol@example.com" to false.',
+    clues: ['Set the active flag of the account with email "carol@example.com" to false'],
     sql: "UPDATE customers SET active = false WHERE email = 'carol@example.com';",
     collection: "customers",
-    sampleDocuments: CUSTOMERS,
+    sampleDocuments: CUSTOMERS_SIMPLE,
     hints: [
       "Use `db.customers.updateOne(filter, update)`.",
       "The `$set` operator assigns field values.",
@@ -180,7 +213,12 @@ export const easyProblems: Problem[] = [
         weight: 10,
         expectation: { kind: "collection", name: "customers" },
       },
-      { id: "method", label: "Method", weight: 20, expectation: { kind: "method", method: "updateOne" } },
+      {
+        id: "method",
+        label: "Method",
+        weight: 20,
+        expectation: { kind: "method", method: "updateOne" },
+      },
       {
         id: "filter",
         label: "Filter condition",
@@ -208,12 +246,16 @@ export const easyProblems: Problem[] = [
     sampleDocuments: PRODUCTS,
     hints: [
       "Use a comparison operator on `stock`.",
-      "The \"greater than\" operator is `$gt`.",
+      'The "greater than" operator is `$gt`.',
       "Zero is the threshold, and the comparison is strict.",
     ],
     referenceAnswer: "db.products.find({ stock: { $gt: 0 } })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -234,13 +276,17 @@ export const easyProblems: Problem[] = [
     collection: "products",
     sampleDocuments: PRODUCTS,
     hints: [
-      "\"At least\" means greater than or equal to.",
+      '"At least" means greater than or equal to.',
       "Use `$gte`.",
       "`{ rating: { $gte: 4.5 } }`.",
     ],
     referenceAnswer: "db.products.find({ rating: { $gte: 4.5 } })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -294,70 +340,75 @@ export const easyProblems: Problem[] = [
     ],
   },
   {
-    id: "easy-books-pricelist",
-    title: "Books price list",
+    id: "easy-restock-atlas",
+    title: "Restock the Atlas of Maps",
     difficulty: "easy",
-    operation: "find",
+    operation: "update",
     statement:
-      "Build a price list for the books category that shows only each product's name and price.",
-    clues: ["a price list for the books category", "shows only each product's name and price"],
-    sql: "SELECT name, price FROM products WHERE category = 'books';",
+      "The warehouse booked in five more copies of the Atlas of Maps, so the stock on hand for sku P-100 has to grow by five.",
+    clues: ["the stock on hand for sku P-100 has to grow by five"],
+    sql: "UPDATE products SET stock = stock + 5 WHERE sku = 'P-100';",
     collection: "products",
     sampleDocuments: PRODUCTS,
     hints: [
-      "This combines a filter with a projection.",
-      "The filter goes first, the projection second.",
-      "`{ category: \"books\" }` then `{ name: 1, price: 1 }`.",
+      "Only one product matches, so use `db.products.updateOne(filter, update)`.",
+      "The `$inc` operator adds a number to a field instead of replacing it.",
+      "`{ $inc: { stock: 5 } }` increases the existing value by five.",
     ],
-    referenceAnswer: 'db.products.find({ category: "books" }, { name: 1, price: 1 })',
+    referenceAnswer: 'db.products.updateOne({ sku: "P-100" }, { $inc: { stock: 5 } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateOne" } },
       {
         id: "filter",
         label: "Filter condition",
-        expectation: { kind: "filter", doc: { category: "books" } },
+        expectation: { kind: "filter", doc: { sku: "P-100" } },
       },
       {
-        id: "projection",
-        label: "Projection",
-        expectation: { kind: "projection", doc: { name: 1, price: 1 } },
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $inc: { stock: 5 } } },
       },
     ],
   },
   {
-    id: "easy-gold-tier-list",
-    title: "Gold tier shortlist",
+    id: "easy-tag-gold-customers",
+    title: "Tag the gold tier",
     difficulty: "easy",
-    operation: "find",
+    operation: "update",
     statement:
-      "Growth wants a list of every customer on the gold tier, showing only each customer's name and tier.",
-    clues: ["every customer on the gold tier", "showing only each customer's name and tier"],
-    sql: "SELECT name, tier FROM customers WHERE tier = 'gold';",
+      "Campaigns now target a platinum segment, so the tag platinum has to be added to the account of the customer on the gold tier.",
+    clues: ["the tag platinum has to be added to the account of the customer on the gold tier"],
+    sql: "UPDATE customers SET tags = 'platinum' WHERE tier = 'gold';",
     collection: "customers",
-    sampleDocuments: CUSTOMERS,
+    sampleDocuments: CUSTOMERS_SIMPLE,
     hints: [
-      "An equality match is a plain `{ field: value }` document.",
-      "The projection is the second argument and includes fields with `1`.",
-      'Filter on `{ tier: "gold" }`, then project `{ name: 1, tier: 1 }`.',
+      "The gold tier is a single account, so use `db.customers.updateOne(filter, update)`.",
+      "`$addToSet` appends a value to an array field, but only when it is not there already.",
+      '`{ $addToSet: { tags: "platinum" } }` keeps the array free of duplicates.',
     ],
-    referenceAnswer: 'db.customers.find({ tier: "gold" }, { name: 1, tier: 1 })',
+    referenceAnswer:
+      'db.customers.updateOne({ tier: "gold" }, { $addToSet: { tags: "platinum" } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "customers" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "customers" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateOne" } },
       {
         id: "filter",
         label: "Filter condition",
         expectation: { kind: "filter", doc: { tier: "gold" } },
       },
       {
-        id: "projection",
-        label: "Projection",
-        expectation: {
-          kind: "projection",
-          doc: { name: 1, tier: 1 },
-          variants: [{ name: 1, tier: 1, _id: 0 }],
-        },
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $addToSet: { tags: "platinum" } } },
       },
     ],
   },
@@ -371,15 +422,19 @@ export const easyProblems: Problem[] = [
     clues: ["every customer older than 40"],
     sql: "SELECT * FROM customers WHERE age > 40;",
     collection: "customers",
-    sampleDocuments: CUSTOMERS,
+    sampleDocuments: CUSTOMERS_SIMPLE,
     hints: [
       "Reach for a comparison operator on `age`.",
-      "\"Older than\" is a strict comparison, so `$gt`.",
+      '"Older than" is a strict comparison, so `$gt`.',
       "`{ age: { $gt: 40 } }`.",
     ],
     referenceAnswer: "db.customers.find({ age: { $gt: 40 } })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "customers" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "customers" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -394,15 +449,15 @@ export const easyProblems: Problem[] = [
     difficulty: "easy",
     operation: "update",
     statement:
-      "The retention team has upgraded Dana Scully. Set the tier of the account with email \"dana@example.com\" to \"pro\".",
-    clues: ["Set the tier of the account with email \"dana@example.com\" to \"pro\""],
+      'The retention team has upgraded Dana Scully. Set the tier of the account with email "dana@example.com" to "pro".',
+    clues: ['Set the tier of the account with email "dana@example.com" to "pro"'],
     sql: "UPDATE customers SET tier = 'pro' WHERE email = 'dana@example.com';",
     collection: "customers",
-    sampleDocuments: CUSTOMERS,
+    sampleDocuments: CUSTOMERS_SIMPLE,
     hints: [
       "Only one account changes, so `updateOne` is right.",
       "The filter uses an equality match on `email`.",
-      "`{ $set: { tier: \"pro\" } }` assigns the new plan.",
+      '`{ $set: { tier: "pro" } }` assigns the new plan.',
     ],
     referenceAnswer:
       'db.customers.updateOne({ email: "dana@example.com" }, { $set: { tier: "pro" } })',
@@ -413,7 +468,12 @@ export const easyProblems: Problem[] = [
         weight: 10,
         expectation: { kind: "collection", name: "customers" },
       },
-      { id: "method", label: "Method", weight: 20, expectation: { kind: "method", method: "updateOne" } },
+      {
+        id: "method",
+        label: "Method",
+        weight: 20,
+        expectation: { kind: "method", method: "updateOne" },
+      },
       {
         id: "filter",
         label: "Filter condition",
@@ -438,15 +498,19 @@ export const easyProblems: Problem[] = [
     clues: ["every order with a total of at least 200"],
     sql: "SELECT * FROM orders WHERE total >= 200;",
     collection: "orders",
-    sampleDocuments: ORDERS,
+    sampleDocuments: ORDERS_SIMPLE,
     hints: [
       "Filter on the numeric `total` field.",
-      "\"At least\" is an inclusive comparison, so `$gte`.",
+      '"At least" is an inclusive comparison, so `$gte`.',
       "`{ total: { $gte: 200 } }`.",
     ],
     referenceAnswer: "db.orders.find({ total: { $gte: 200 } })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "orders" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "orders" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -456,38 +520,38 @@ export const easyProblems: Problem[] = [
     ],
   },
   {
-    id: "easy-pending-order-totals",
-    title: "Pending order triage sheet",
+    id: "easy-surcharge-pending-orders",
+    title: "Add a surcharge to pending orders",
     difficulty: "easy",
-    operation: "find",
+    operation: "update",
     statement:
-      "The shipping desk needs a triage sheet of every order that is still pending, showing only the customerId and the total.",
-    clues: ["every order that is still pending", "showing only the customerId and the total"],
-    sql: "SELECT customerId, total FROM orders WHERE status = 'pending';",
+      "A fuel surcharge of 10 was announced for every order that is still pending, so each of those totals has to grow by 10.",
+    clues: ["every order that is still pending", "each of those totals has to grow by 10"],
+    sql: "UPDATE orders SET total = total + 10 WHERE status = 'pending';",
     collection: "orders",
-    sampleDocuments: ORDERS,
+    sampleDocuments: ORDERS_SIMPLE,
     hints: [
-      "\"Still pending\" is an equality match on `status`.",
-      "The requested output fields go in the second argument.",
-      '`{ status: "pending" }` then `{ customerId: 1, total: 1 }`.',
+      "Several orders are still pending, so use `updateMany`.",
+      '`$inc` adds to the current value, which is what "grow by 10" asks for.',
+      "`{ $inc: { total: 10 } }` raises each matching total without overwriting it.",
     ],
-    referenceAnswer: 'db.orders.find({ status: "pending" }, { customerId: 1, total: 1 })',
+    referenceAnswer: 'db.orders.updateMany({ status: "pending" }, { $inc: { total: 10 } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "orders" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "orders" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateMany" } },
       {
         id: "filter",
         label: "Filter condition",
         expectation: { kind: "filter", doc: { status: "pending" } },
       },
       {
-        id: "projection",
-        label: "Projection",
-        expectation: {
-          kind: "projection",
-          doc: { customerId: 1, total: 1 },
-          variants: [{ customerId: 1, total: 1, _id: 0 }],
-        },
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $inc: { total: 10 } } },
       },
     ],
   },
@@ -497,21 +561,17 @@ export const easyProblems: Problem[] = [
     difficulty: "easy",
     operation: "update",
     statement:
-      "The courier signed for the order with _id ObjectId(\"66f1a2b3c4d5e6f7a8b9c0da\"). Record the hand-off by setting its status to \"delivered\".",
-    clues: [
-      "the order with _id ObjectId(\"66f1a2b3c4d5e6f7a8b9c0da\")",
-      "setting its status to \"delivered\"",
-    ],
-    sql: "UPDATE orders SET status = 'delivered' WHERE _id = '66f1a2b3c4d5e6f7a8b9c0da';",
+      'The courier signed for the order with _id 102. Record the hand-off by setting its status to "delivered".',
+    clues: ["the order with _id 102", 'setting its status to "delivered"'],
+    sql: "UPDATE orders SET status = 'delivered' WHERE _id = 102;",
     collection: "orders",
-    sampleDocuments: ORDERS,
+    sampleDocuments: ORDERS_SIMPLE,
     hints: [
       "A single order changes, so use `updateOne`.",
-      "Match the order on `_id` and wrap the id in `ObjectId(...)`.",
+      "Match the order on `_id` with the plain number 102 shown in the sample documents.",
       'The update is `{ $set: { status: "delivered" } }`.',
     ],
-    referenceAnswer:
-      'db.orders.updateOne({ _id: ObjectId("66f1a2b3c4d5e6f7a8b9c0da") }, { $set: { status: "delivered" } })',
+    referenceAnswer: 'db.orders.updateOne({ _id: 102 }, { $set: { status: "delivered" } })',
     rubric: [
       {
         id: "collection",
@@ -519,12 +579,17 @@ export const easyProblems: Problem[] = [
         weight: 10,
         expectation: { kind: "collection", name: "orders" },
       },
-      { id: "method", label: "Method", weight: 20, expectation: { kind: "method", method: "updateOne" } },
+      {
+        id: "method",
+        label: "Method",
+        weight: 20,
+        expectation: { kind: "method", method: "updateOne" },
+      },
       {
         id: "filter",
         label: "Filter condition",
         weight: 30,
-        expectation: { kind: "filter", doc: { _id: objectId("66f1a2b3c4d5e6f7a8b9c0da") } },
+        expectation: { kind: "filter", doc: { _id: 102 } },
       },
       {
         id: "update",
@@ -535,38 +600,39 @@ export const easyProblems: Problem[] = [
     ],
   },
   {
-    id: "easy-engineering-roster",
-    title: "Engineering roster",
+    id: "easy-engineering-remote",
+    title: "Mark engineering as remote",
     difficulty: "easy",
-    operation: "find",
+    operation: "update",
     statement:
-      "The engineering manager needs the roster of everyone in the engineering department, showing only their name and title.",
-    clues: ["everyone in the engineering department", "showing only their name and title"],
-    sql: "SELECT name, title FROM employees WHERE department = 'engineering';",
+      "Engineering has moved to fully remote working, so everyone in the engineering department needs the remote flag turned on.",
+    clues: ["everyone in the engineering department needs the remote flag turned on"],
+    sql: "UPDATE employees SET remote = 1 WHERE department = 'engineering';",
     collection: "employees",
     sampleDocuments: EMPLOYEES,
     hints: [
-      "Match `department` with an equality filter.",
-      "Then trim the output down to the two requested fields.",
-      '`{ department: "engineering" }` then `{ name: 1, title: 1 }`.',
+      "The whole department changes, so use `db.employees.updateMany(filter, update)`.",
+      "The `$set` operator writes the value you give it.",
+      "`{ $set: { remote: true } }` flips the boolean flag on every match.",
     ],
-    referenceAnswer: 'db.employees.find({ department: "engineering" }, { name: 1, title: 1 })',
+    referenceAnswer:
+      'db.employees.updateMany({ department: "engineering" }, { $set: { remote: true } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "employees" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "employees" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateMany" } },
       {
         id: "filter",
         label: "Filter condition",
         expectation: { kind: "filter", doc: { department: "engineering" } },
       },
       {
-        id: "projection",
-        label: "Projection",
-        expectation: {
-          kind: "projection",
-          doc: { name: 1, title: 1 },
-          variants: [{ name: 1, title: 1, _id: 0 }],
-        },
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $set: { remote: true } } },
       },
     ],
   },
@@ -575,20 +641,23 @@ export const easyProblems: Problem[] = [
     title: "Top earners review",
     difficulty: "easy",
     operation: "find",
-    statement:
-      "Compensation wants a list of every employee earning 130000 or more a year.",
+    statement: "Compensation wants a list of every employee earning 130000 or more a year.",
     clues: ["every employee earning 130000 or more a year"],
     sql: "SELECT * FROM employees WHERE salary >= 130000;",
     collection: "employees",
     sampleDocuments: EMPLOYEES,
     hints: [
       "The base pay lives in the `salary` field.",
-      "\"Or more\" means greater than or equal to, so `$gte`.",
+      '"Or more" means greater than or equal to, so `$gte`.',
       "`{ salary: { $gte: 130000 } }`.",
     ],
     referenceAnswer: "db.employees.find({ salary: { $gte: 130000 } })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "employees" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "employees" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -609,13 +678,17 @@ export const easyProblems: Problem[] = [
     collection: "reviews",
     sampleDocuments: REVIEWS,
     hints: [
-      "\"Scored 2 or less\" is an inclusive upper bound.",
+      '"Scored 2 or less" is an inclusive upper bound.',
       "The operator is `$lte`, and the field is `rating`.",
-      '`{ rating: { $lte: 2 } }` then `{ productId: 1, rating: 1 }`.',
+      "`{ rating: { $lte: 2 } }` then `{ productId: 1, rating: 1 }`.",
     ],
     referenceAnswer: "db.reviews.find({ rating: { $lte: 2 } }, { productId: 1, rating: 1 })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "reviews" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "reviews" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -634,95 +707,110 @@ export const easyProblems: Problem[] = [
     ],
   },
   {
-    id: "easy-unverified-reviews",
-    title: "Unverified review audit",
+    id: "easy-verify-pen-review",
+    title: "Confirm a purchase on a review",
     difficulty: "easy",
-    operation: "find",
+    operation: "update",
     statement:
-      "The trust and safety team wants to re-check every review that was not verified before it appears on the site.",
-    clues: ["every review that was not verified"],
-    sql: "SELECT * FROM reviews WHERE verified = false;",
+      "Support matched the receipt for the review with _id 6, so that review is no longer unverified and its verified flag has to be turned on.",
+    clues: ["the review with _id 6", "its verified flag has to be turned on"],
+    sql: "UPDATE reviews SET verified = 1 WHERE _id = 6;",
     collection: "reviews",
     sampleDocuments: REVIEWS,
     hints: [
-      "`verified` is a boolean field, so no comparison operator is needed.",
-      "Matching `false` is a plain equality filter.",
-      '`{ verified: false }`.',
+      "A single review changes, so use `db.reviews.updateOne(filter, update)`.",
+      "Match the review on `_id` with the plain number 6 from the sample documents.",
+      "The update is `{ $set: { verified: true } }`.",
     ],
-    referenceAnswer: "db.reviews.find({ verified: false })",
+    referenceAnswer: "db.reviews.updateOne({ _id: 6 }, { $set: { verified: true } })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "reviews" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "reviews" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateOne" } },
       {
         id: "filter",
         label: "Filter condition",
-        expectation: { kind: "filter", doc: { verified: false } },
+        expectation: { kind: "filter", doc: { _id: 6 } },
+      },
+      {
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $set: { verified: true } } },
       },
     ],
   },
   {
-    id: "easy-urgent-ticket-queue",
-    title: "Urgent ticket queue",
+    id: "easy-close-refund-ticket",
+    title: "Close the refund ticket",
     difficulty: "easy",
-    operation: "find",
+    operation: "update",
     statement:
-      "Support management wants a queue of every ticket marked urgent, showing only the subject and the status.",
-    clues: ["every ticket marked urgent", "showing only the subject and the status"],
-    sql: "SELECT subject, status FROM tickets WHERE priority = 'urgent';",
+      'The refund on the ticket with _id 5 was paid out, so that ticket is finished and its status has to be set to "closed".',
+    clues: ["the ticket with _id 5", 'its status has to be set to "closed"'],
+    sql: "UPDATE tickets SET status = 'closed' WHERE _id = 5;",
     collection: "tickets",
     sampleDocuments: TICKETS,
     hints: [
-      "Urgency is recorded in the `priority` field.",
-      "An equality match is enough here.",
-      '`{ priority: "urgent" }` then `{ subject: 1, status: 1 }`.',
+      "A single ticket changes, so use `db.tickets.updateOne(filter, update)`.",
+      "Ticket ids are plain numbers, so match `_id` with the plain value 5.",
+      'The update is `{ $set: { status: "closed" } }`.',
     ],
-    referenceAnswer: 'db.tickets.find({ priority: "urgent" }, { subject: 1, status: 1 })',
+    referenceAnswer: 'db.tickets.updateOne({ _id: 5 }, { $set: { status: "closed" } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "tickets" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "tickets" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateOne" } },
       {
         id: "filter",
         label: "Filter condition",
-        expectation: { kind: "filter", doc: { priority: "urgent" } },
+        expectation: { kind: "filter", doc: { _id: 5 } },
       },
       {
-        id: "projection",
-        label: "Projection",
-        expectation: {
-          kind: "projection",
-          doc: { subject: 1, status: 1 },
-          variants: [{ subject: 1, status: 1, _id: 0 }],
-        },
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $set: { status: "closed" } } },
       },
     ],
   },
   {
-    id: "easy-ticket-by-id",
-    title: "Open one helpdesk ticket",
+    id: "easy-clear-ticket-assignee",
+    title: "Clear a closed ticket's assignee",
     difficulty: "easy",
-    operation: "find",
-    statement: "An agent pulls up the single helpdesk ticket with _id 2 to read the conversation.",
-    clues: ["the single helpdesk ticket with _id 2"],
-    sql: "SELECT * FROM tickets WHERE _id = 2;",
+    operation: "update",
+    statement:
+      "Ticket _id 3 is closed, so the agent who owned it should no longer be recorded and the assignee field has to be removed from it.",
+    clues: ["the assignee field has to be removed from it"],
+    sql: "UPDATE tickets SET assignee = NULL WHERE _id = 3;",
     collection: "tickets",
     sampleDocuments: TICKETS,
     hints: [
-      "Ticket ids are plain numbers, so no `ObjectId(...)` wrapper is needed.",
-      "Expecting one document makes `findOne` the natural method.",
-      "`db.tickets.findOne({ _id: 2 })`; `find` is accepted too.",
+      "A single ticket changes, so use `db.tickets.updateOne(filter, update)`.",
+      "The `$unset` operator deletes a field outright.",
+      '`$unset` ignores its operand, so the convention is an empty string: `{ $unset: { assignee: "" } }`.',
     ],
-    referenceAnswer: "db.tickets.findOne({ _id: 2 })",
+    referenceAnswer: 'db.tickets.updateOne({ _id: 3 }, { $unset: { assignee: "" } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "tickets" } },
       {
-        id: "method",
-        label: "Method",
-        expectation: { kind: "method", method: "findOne", equivalents: ["find"] },
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "tickets" },
       },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateOne" } },
       {
         id: "filter",
         label: "Filter condition",
-        expectation: { kind: "filter", doc: { _id: 2 } },
+        expectation: { kind: "filter", doc: { _id: 3 } },
+      },
+      {
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $unset: { assignee: "" } } },
       },
     ],
   },
@@ -742,13 +830,17 @@ export const easyProblems: Problem[] = [
     sampleDocuments: SESSIONS,
     hints: [
       "Session length is stored in `durationMins`.",
-      "\"At least\" means the inclusive comparison `$gte`.",
-      '`{ durationMins: { $gte: 30 } }` then `{ userId: 1, durationMins: 1 }`.',
+      '"At least" means the inclusive comparison `$gte`.',
+      "`{ durationMins: { $gte: 30 } }` then `{ userId: 1, durationMins: 1 }`.",
     ],
     referenceAnswer:
       "db.sessions.find({ durationMins: { $gte: 30 } }, { userId: 1, durationMins: 1 })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "sessions" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "sessions" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -767,65 +859,74 @@ export const easyProblems: Problem[] = [
     ],
   },
   {
-    id: "easy-incomplete-sessions",
-    title: "Dropped-out sessions",
+    id: "easy-complete-session",
+    title: "Mark a session completed",
     difficulty: "easy",
-    operation: "find",
+    operation: "update",
     statement:
-      "Growth wants to win back users who dropped out mid-flow, so it needs every session that was not completed.",
-    clues: ["every session that was not completed"],
-    sql: "SELECT * FROM sessions WHERE completed = false;",
+      "The user came back and finished the flow, so the session with _id 4 is over and its completed flag has to be turned on.",
+    clues: ["the session with _id 4", "its completed flag has to be turned on"],
+    sql: "UPDATE sessions SET completed = 1 WHERE _id = 4;",
     collection: "sessions",
     sampleDocuments: SESSIONS,
     hints: [
-      "Completion is tracked by the boolean `completed` field.",
-      "Matching a boolean needs no operator at all.",
-      "`{ completed: false }`.",
+      "A single session changes, so use `db.sessions.updateOne(filter, update)`.",
+      "Session ids are plain numbers, so match `_id` with the plain value 4.",
+      "The update is `{ $set: { completed: true } }`.",
     ],
-    referenceAnswer: "db.sessions.find({ completed: false })",
+    referenceAnswer: "db.sessions.updateOne({ _id: 4 }, { $set: { completed: true } })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "sessions" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "sessions" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateOne" } },
       {
         id: "filter",
         label: "Filter condition",
-        expectation: { kind: "filter", doc: { completed: false } },
+        expectation: { kind: "filter", doc: { _id: 4 } },
+      },
+      {
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $set: { completed: true } } },
       },
     ],
   },
   {
-    id: "easy-overdue-invoices",
-    title: "Overdue invoice chase list",
+    id: "easy-overdue-late-fee",
+    title: "Charge a late fee on overdue invoices",
     difficulty: "easy",
-    operation: "find",
+    operation: "update",
     statement:
-      "Credit control chases late payers and needs every invoice marked overdue, showing only the amount and the currency.",
-    clues: ["every invoice marked overdue", "showing only the amount and the currency"],
-    sql: "SELECT amount, currency FROM invoices WHERE status = 'overdue';",
+      "A late fee of 50 was added to every invoice marked overdue, so each of those amounts has to grow by 50.",
+    clues: ["every invoice marked overdue", "each of those amounts has to grow by 50"],
+    sql: "UPDATE invoices SET amount = amount + 50 WHERE status = 'overdue';",
     collection: "invoices",
     sampleDocuments: INVOICES,
     hints: [
-      "Payment state lives in the `status` field.",
-      "An equality match on that field is all you need.",
-      '`{ status: "overdue" }` then `{ amount: 1, currency: 1 }`.',
+      "Every overdue invoice is affected, so use `updateMany`.",
+      "`$inc` adds to the current value rather than replacing it.",
+      "`{ $inc: { amount: 50 } }` raises each matching amount by the fee.",
     ],
-    referenceAnswer: 'db.invoices.find({ status: "overdue" }, { amount: 1, currency: 1 })',
+    referenceAnswer: 'db.invoices.updateMany({ status: "overdue" }, { $inc: { amount: 50 } })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "invoices" } },
-      { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "invoices" },
+      },
+      { id: "method", label: "Method", expectation: { kind: "method", method: "updateMany" } },
       {
         id: "filter",
         label: "Filter condition",
         expectation: { kind: "filter", doc: { status: "overdue" } },
       },
       {
-        id: "projection",
-        label: "Projection",
-        expectation: {
-          kind: "projection",
-          doc: { amount: 1, currency: 1 },
-          variants: [{ amount: 1, currency: 1, _id: 0 }],
-        },
+        id: "update",
+        label: "Update document",
+        expectation: { kind: "update", doc: { $inc: { amount: 50 } } },
       },
     ],
   },
@@ -842,12 +943,16 @@ export const easyProblems: Problem[] = [
     sampleDocuments: INVOICES,
     hints: [
       "Compare the numeric `amount` field against a threshold.",
-      "\"More than\" is a strict comparison, so `$gt`.",
+      '"More than" is a strict comparison, so `$gt`.',
       "`{ amount: { $gt: 1000 } }`.",
     ],
     referenceAnswer: "db.invoices.find({ amount: { $gt: 1000 } })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "invoices" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "invoices" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -863,21 +968,22 @@ export const easyProblems: Problem[] = [
     operation: "find",
     statement:
       "Merchandising wants a replenishment list of every product with fewer than 10 units on hand, showing only the sku and the stock.",
-    clues: [
-      "every product with fewer than 10 units on hand",
-      "showing only the sku and the stock",
-    ],
+    clues: ["every product with fewer than 10 units on hand", "showing only the sku and the stock"],
     sql: "SELECT sku, stock FROM products WHERE stock < 10;",
     collection: "products",
     sampleDocuments: PRODUCTS,
     hints: [
       "Units on hand are stored in `stock`.",
-      "\"Fewer than\" is a strict comparison, so `$lt`.",
-      '`{ stock: { $lt: 10 } }` then `{ sku: 1, stock: 1 }`.',
+      '"Fewer than" is a strict comparison, so `$lt`.',
+      "`{ stock: { $lt: 10 } }` then `{ sku: 1, stock: 1 }`.",
     ],
     referenceAnswer: "db.products.find({ stock: { $lt: 10 } }, { sku: 1, stock: 1 })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -901,8 +1007,8 @@ export const easyProblems: Problem[] = [
     difficulty: "easy",
     operation: "find",
     statement:
-      "The returns desk needs the name and the price of the single product with the sku \"P-103\".",
-    clues: ["the single product with the sku \"P-103\"", "the name and the price"],
+      'The returns desk needs the name and the price of the single product with the sku "P-103".',
+    clues: ['the single product with the sku "P-103"', "the name and the price"],
     sql: "SELECT name, price FROM products WHERE sku = 'P-103';",
     collection: "products",
     sampleDocuments: PRODUCTS,
@@ -913,7 +1019,11 @@ export const easyProblems: Problem[] = [
     ],
     referenceAnswer: 'db.products.findOne({ sku: "P-103" }, { name: 1, price: 1 })',
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
       {
         id: "method",
         label: "Method",
@@ -948,12 +1058,16 @@ export const easyProblems: Problem[] = [
     sampleDocuments: PRODUCTS,
     hints: [
       "Use the `price` field for the comparison.",
-      "\"More than\" is strict, so use `$gt` rather than `$gte`.",
+      '"More than" is strict, so use `$gt` rather than `$gte`.',
       "`{ price: { $gt: 30 } }`.",
     ],
     referenceAnswer: "db.products.find({ price: { $gt: 30 } })",
     rubric: [
-      { id: "collection", label: "Collection", expectation: { kind: "collection", name: "products" } },
+      {
+        id: "collection",
+        label: "Collection",
+        expectation: { kind: "collection", name: "products" },
+      },
       { id: "method", label: "Method", expectation: { kind: "method", method: "find" } },
       {
         id: "filter",
@@ -968,8 +1082,8 @@ export const easyProblems: Problem[] = [
     difficulty: "easy",
     operation: "update",
     statement:
-      "The pricing team has approved a promotion. Set the price of the product with the sku \"P-102\" to 10.",
-    clues: ["Set the price of the product with the sku \"P-102\" to 10"],
+      'The pricing team has approved a promotion. Set the price of the product with the sku "P-102" to 10.',
+    clues: ['Set the price of the product with the sku "P-102" to 10'],
     sql: "UPDATE products SET price = 10 WHERE sku = 'P-102';",
     collection: "products",
     sampleDocuments: PRODUCTS,
@@ -986,7 +1100,12 @@ export const easyProblems: Problem[] = [
         weight: 10,
         expectation: { kind: "collection", name: "products" },
       },
-      { id: "method", label: "Method", weight: 20, expectation: { kind: "method", method: "updateOne" } },
+      {
+        id: "method",
+        label: "Method",
+        weight: 20,
+        expectation: { kind: "method", method: "updateOne" },
+      },
       {
         id: "filter",
         label: "Filter condition",
